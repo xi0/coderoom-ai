@@ -1,2 +1,2 @@
 # Coderoom AI
-A simple AI code assistant with a web based UI
+A simple AI code assistant with a web based UI.
