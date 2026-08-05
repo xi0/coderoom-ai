@@ -65,6 +65,17 @@
             Certainly! Here is a clean CSS Flexbox structure designed to stretch across the full viewport, feature a fixed header and expandable auto-resizing input box at the bottom.
           </div>
         </div>
+
+        <!-- System Message - Working -->
+        <div class="message system-message working-message">
+          <div class="message-content">
+            <span class="gear-icon">⚙</span>
+            <span class="message-text">Working on your task now...</span>
+            <div class="progress-container">
+              <div id="working-progress" class="progress-bar" style="width: 67%;"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -109,6 +120,10 @@
       textarea.style.height = 'auto';
       textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
     });
+
+    // Progress Bar Control for Working Message
+    // To adjust progress, simply update the width style of the element with id 'working-progress'
+    // Example: document.getElementById('working-progress').style.width = '67%';
   </script>
 </body>
 </html>
