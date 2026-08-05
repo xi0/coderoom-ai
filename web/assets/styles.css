@@ -255,6 +255,17 @@ html, body {
   animation: spin 1.5s linear infinite;
 }
 
+.tool-icon {
+  display: inline-block;
+  font-size: 1.2rem;
+  margin-right: 8px;
+}
+
+.function-call {
+  color: var(--accent-color);
+  font-family: monospace;
+}
+
 /* Progress Bar Styling */
 .progress-container {
   width: 100%;
