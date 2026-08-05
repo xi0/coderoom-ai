@@ -244,6 +244,13 @@ html, body {
   padding-bottom: 8px;
 }
 
+.working-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
 .working-message .message-content > .gear-icon,
 .working-message .message-content > .message-text {
   align-self: flex-start;
