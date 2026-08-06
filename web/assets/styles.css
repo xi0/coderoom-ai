@@ -258,7 +258,8 @@ html, body {
 
 .gear-icon {
   display: inline-block;
-  font-size: 1.2rem;
+  font-size: 2rem;
+  line-height: normal;
   animation: spin 1.5s linear infinite;
 }
 
@@ -271,6 +272,98 @@ html, body {
 .function-call {
   color: var(--accent-color);
   font-family: monospace;
+}
+
+/* Plan Proposal Message Styling */
+.plan-message .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.plan-message h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 8px 0 4px 0;
+}
+
+.plan-message p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.plan-message em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.plan-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.plan-list li {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 4px 0;
+}
+
+.plan-list li strong {
+  color: var(--accent-color);
+}
+
+.plan-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.plan-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.plan-btn-decline {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.plan-btn-decline:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.plan-btn-proceed {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.plan-btn-proceed:hover {
+  background-color: var(--accent-hover);
 }
 
 /* Progress Bar Styling */
