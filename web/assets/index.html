@@ -118,6 +118,22 @@
             </div>
           </div>
         </div>
+
+        <!-- System Message - Options Selection -->
+        <div class="message system-message options-message">
+          <div class="message-content">
+            <h3 class="options-title">Please select an option:</h3>
+            <div class="options-container">
+              <button class="option-btn" type="button" data-option="1">This is a much longer placeholder text option that is approximately five times longer than the original short option label</button>
+              <button class="option-btn" type="button" data-option="2">Another extended placeholder text option that provides more descriptive context for the user to understand what they are selecting</button>
+              <button class="option-btn" type="button" data-option="3">A third lengthy placeholder option with detailed information to help guide the user toward making an informed decision</button>
+              <button class="option-btn" type="button" data-option="4">The fourth and final extended placeholder option that maintains consistency with the other verbose option descriptions</button>
+            </div>
+            <div class="options-actions">
+              <button class="options-btn-proceed" type="button">Proceed</button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -166,6 +182,20 @@
     // Progress Bar Control for Working Message
     // To adjust progress, simply update the width style of the element with id 'working-progress'
     // Example: document.getElementById('working-progress').style.width = '67%';
+
+    // Options Selection Functionality
+    const optionButtons = document.querySelectorAll('.option-btn');
+    optionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove selected class from all buttons
+        optionButtons.forEach(btn => btn.classList.remove('selected'));
+        // Add selected class to clicked button
+        button.classList.add('selected');
+        // Log the selected option (can be customized for actual use)
+        const selectedOption = button.getAttribute('data-option');
+        console.log('User selected option:', selectedOption);
+      });
+    });
   </script>
 </body>
 </html>
