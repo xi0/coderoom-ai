@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coderoom AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <!-- Line 1 -->
+      <div class="top-bar-line1">
+        <div class="brand">
+          <img src="logo.png" alt="Coderoom AI Logo" class="logo" />
+          <span class="brand-title">Coderoom AI</span>
+        </div>
+        <div class="actions">
+          <button id="mode-toggle" class="icon-btn" aria-label="Modification mode: Modifications allowed" title="Modification mode: Modifications allowed" data-mode="modify">
+            <svg class="modify-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg class="inspect-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button id="reset-session-btn" class="icon-btn" aria-label="Reset session" title="Reset session">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          
+          <div class="settings-dropdown-wrapper">
+            <button id="settings-toggle" class="icon-btn" aria-label="Settings" title="Settings">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <div id="settings-menu" class="settings-menu hidden">
+              <button class="menu-item" type="button">Global settings</button>
+              <button class="menu-item" type="button">Project settings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line 2 -->
+      <div class="top-bar-line2">
+        <span class="project-name">My Cool Project</span>
+        <span class="project-dir">/path/to/my/cool-project</span>
+      </div>
+    </header>
+
+    <!-- Chat Area -->
+    <main class="chat-container">
+      <div class="chat-conversation">
+        <!-- System Response -->
+        <div class="message system-message">
+          <div class="message-content">
+            Hello! I am Coderoom AI. How can I assist you with your code today?
+          </div>
+        </div>
+
+        <!-- User Prompt -->
+        <div class="message user-message">
+          <div class="message-content">
+            Can you help me set up a responsive UI header and layout?
+          </div>
+        </div>
+
+        <!-- System Response -->
+        <div class="message system-message">
+          <div class="message-content">
+            Certainly! Here is a clean CSS Flexbox structure designed to stretch across the full viewport, feature a fixed header and expandable auto-resizing input box at the bottom.
+          </div>
+        </div>
+
+        <!-- System Message - Working -->
+        <div class="message system-message working-message">
+          <div class="message-content">
+            <div class="working-header">
+              <span class="gear-icon">⚙</span>
+              <span class="message-text">Working on your task now...</span>
+            </div>
+            <div class="progress-container">
+              <div id="working-progress" class="progress-bar" style="width: 67%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Message - Tool Call -->
+        <div class="message system-message">
+          <div class="message-content">
+            <span class="tool-icon">🔧</span>
+            <span class="message-text">Tool: <span class="function-call">read_file("html/some_interesting_file.html")</span></span>
+          </div>
+        </div>
+
+        <!-- System Message - Plan Proposal -->
+        <div class="message system-message plan-message">
+          <div class="message-content">
+            <h3 class="plan-title">📋 Proposed Plan</h3>
+
+            <h4>Overview</h4>
+            <p>I propose implementing a new feature to enhance the user experience. This plan outlines the key steps and considerations.</p>
+
+            <h4>Key Steps</h4>
+            <ul class="plan-list">
+              <li><strong>Phase 1:</strong> Analyze current codebase structure</li>
+              <li><strong>Phase 2:</strong> Design the new component architecture</li>
+              <li><strong>Phase 3:</strong> Implement core functionality</li>
+              <li><strong>Phase 4:</strong> Add unit tests and documentation</li>
+            </ul>
+
+            <h4>Expected Outcomes</h4>
+            <ul class="plan-list">
+              <li>Improved performance by 30%</li>
+              <li>Better code maintainability</li>
+              <li>Enhanced user interface responsiveness</li>
+            </ul>
+
+            <p><em>Please review this plan and decide whether to proceed or decline.</em></p>
+
+            <div class="plan-actions">
+              <button class="plan-btn plan-btn-decline" type="button">Decline</button>
+              <button class="plan-btn plan-btn-proceed" type="button">Proceed</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Message - Options Selection -->
+        <div class="message system-message options-message">
+          <div class="message-content">
+            <h3 class="options-title">Please select an option:</h3>
+            <div class="options-container">
+              <button class="option-btn" type="button" data-option="1">This is a much longer placeholder text option that is approximately five times longer than the original short option label</button>
+              <button class="option-btn" type="button" data-option="2">Another extended placeholder text option that provides more descriptive context for the user to understand what they are selecting</button>
+              <button class="option-btn" type="button" data-option="3">A third lengthy placeholder option with detailed information to help guide the user toward making an informed decision</button>
+              <button class="option-btn" type="button" data-option="4">The fourth and final extended placeholder option that maintains consistency with the other verbose option descriptions</button>
+            </div>
+            <div class="options-actions">
+              <button class="options-btn-proceed" type="button">Proceed</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Input Footer -->
+    <footer class="input-container">
+      <div class="input-wrapper">
+        <textarea id="prompt-input" rows="1" placeholder="Type your prompt here..."></textarea>
+        <button id="send-btn" class="send-btn" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Mode Toggle Functionality (Modifications allowed / Inspection only)
+    const modeToggleBtn = document.getElementById('mode-toggle');
+    modeToggleBtn.addEventListener('click', () => {
+      const currentMode = modeToggleBtn.getAttribute('data-mode');
+      const newMode = currentMode === 'modify' ? 'inspect' : 'modify';
+      modeToggleBtn.setAttribute('data-mode', newMode);
+
+      const modeLabel = newMode === 'modify' ? 'Modifications allowed' : 'Inspection only';
+      modeToggleBtn.setAttribute('aria-label', `Modification mode: ${modeLabel}`);
+      modeToggleBtn.setAttribute('title', `Modification mode: ${modeLabel}`);
+    });
+
+    // Theme Toggle Functionality
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+    });
+
+    // Settings Menu Toggle Functionality
+    const settingsBtn = document.getElementById('settings-toggle');
+    const settingsMenu = document.getElementById('settings-menu');
+
+    settingsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      settingsMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', () => {
+      if (!settingsMenu.classList.contains('hidden')) {
+        settingsMenu.classList.add('hidden');
+      }
+    });
+
+    // Auto-expanding Textarea
+    const textarea = document.getElementById('prompt-input');
+    textarea.addEventListener('input', () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    });
+
+    // Progress Bar Control for Working Message
+    // To adjust progress, simply update the width style of the element with id 'working-progress'
+    // Example: document.getElementById('working-progress').style.width = '67%';
+
+    // Options Selection Functionality
+    const optionButtons = document.querySelectorAll('.option-btn');
+    optionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove selected class from all buttons
+        optionButtons.forEach(btn => btn.classList.remove('selected'));
+        // Add selected class to clicked button
+        button.classList.add('selected');
+        // Log the selected option (can be customized for actual use)
+        const selectedOption = button.getAttribute('data-option');
+        console.log('User selected option:', selectedOption);
+      });
+    });
+  </script>
+</body>
+</html>
