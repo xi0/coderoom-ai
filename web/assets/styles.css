@@ -399,6 +399,7 @@ html, body {
   border: 1px solid var(--border-color);
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
+  text-align: left;
 }
 
 .option-btn:hover {
