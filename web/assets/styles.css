@@ -115,6 +115,12 @@ html, body {
 [data-theme="light"] .sun-icon { display: none; }
 [data-theme="light"] .moon-icon { display: block; }
 
+/* Mode Toggle Icon Visibility */
+.icon-btn[data-mode="modify"] .modify-icon { display: block; }
+.icon-btn[data-mode="modify"] .inspect-icon { display: none; }
+.icon-btn[data-mode="inspect"] .modify-icon { display: none; }
+.icon-btn[data-mode="inspect"] .inspect-icon { display: block; }
+
 /* Settings Dropdown */
 .settings-dropdown-wrapper {
   position: relative;
