@@ -6,6 +6,7 @@
   <title>Coderoom AI</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="logo.png">
+  <script src="/wasm_exec.js"></script>
 </head>
 <body>
   <div class="app-container">
@@ -52,92 +53,14 @@
     <!-- Chat Area -->
     <main class="chat-container">
       <div class="chat-conversation">
-        <!-- System Response -->
-        <div class="message system-message">
-          <div class="message-content">
-            Hello! I am Coderoom AI. How can I assist you with your code today?
-          </div>
-        </div>
-
-        <!-- User Prompt -->
-        <div class="message user-message">
-          <div class="message-content">
-            Can you help me set up a responsive UI header and layout?
-          </div>
-        </div>
-
-        <!-- System Response -->
-        <div class="message system-message">
-          <div class="message-content">
-            Certainly! Here is a clean CSS Flexbox structure designed to stretch across the full viewport, feature a fixed header and expandable auto-resizing input box at the bottom.
-          </div>
-        </div>
-
-        <!-- System Message - Working -->
-        <div class="message system-message working-message">
+        <div class="message system-message working-message" id="working-message">
           <div class="message-content">
             <div class="working-header">
               <span class="gear-icon">⚙</span>
-              <span class="message-text">Working on your task now...</span>
+              <span class="message-text">Initializing...</span>
             </div>
             <div class="progress-container">
-              <div id="working-progress" class="progress-bar" style="width: 67%;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- System Message - Tool Call -->
-        <div class="message system-message">
-          <div class="message-content">
-            <span class="tool-icon">🔧</span>
-            <span class="message-text">Tool: <span class="function-call">read_file("html/some_interesting_file.html")</span></span>
-          </div>
-        </div>
-
-        <!-- System Message - Plan Proposal -->
-        <div class="message system-message plan-message">
-          <div class="message-content">
-            <h3 class="plan-title">📋 Proposed Plan</h3>
-
-            <h4>Overview</h4>
-            <p>I propose implementing a new feature to enhance the user experience. This plan outlines the key steps and considerations.</p>
-
-            <h4>Key Steps</h4>
-            <ul class="plan-list">
-              <li><strong>Phase 1:</strong> Analyze current codebase structure</li>
-              <li><strong>Phase 2:</strong> Design the new component architecture</li>
-              <li><strong>Phase 3:</strong> Implement core functionality</li>
-              <li><strong>Phase 4:</strong> Add unit tests and documentation</li>
-            </ul>
-
-            <h4>Expected Outcomes</h4>
-            <ul class="plan-list">
-              <li>Improved performance by 30%</li>
-              <li>Better code maintainability</li>
-              <li>Enhanced user interface responsiveness</li>
-            </ul>
-
-            <p><em>Please review this plan and decide whether to proceed or decline.</em></p>
-
-            <div class="plan-actions">
-              <button class="plan-btn plan-btn-decline" type="button">Decline</button>
-              <button class="plan-btn plan-btn-proceed" type="button">Proceed</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- System Message - Options Selection -->
-        <div class="message system-message options-message">
-          <div class="message-content">
-            <h3 class="options-title">Please select an option:</h3>
-            <div class="options-container">
-              <button class="option-btn" type="button" data-option="1">This is a much longer placeholder text option that is approximately five times longer than the original short option label</button>
-              <button class="option-btn" type="button" data-option="2">Another extended placeholder text option that provides more descriptive context for the user to understand what they are selecting</button>
-              <button class="option-btn" type="button" data-option="3">A third lengthy placeholder option with detailed information to help guide the user toward making an informed decision</button>
-              <button class="option-btn" type="button" data-option="4">The fourth and final extended placeholder option that maintains consistency with the other verbose option descriptions</button>
-            </div>
-            <div class="options-actions">
-              <button class="options-btn-proceed" type="button">Proceed</button>
+              <div id="working-progress" class="progress-bar" style="width: 0%;"></div>
             </div>
           </div>
         </div>
@@ -156,52 +79,11 @@
   </div>
 
   <script>
-    // Mode Toggle Functionality (Modifications allowed / Inspection only)
-    const modeToggleBtn = document.getElementById('mode-toggle');
-    modeToggleBtn.addEventListener('click', () => {
-      const currentMode = modeToggleBtn.getAttribute('data-mode');
-      const newMode = currentMode === 'modify' ? 'inspect' : 'modify';
-      modeToggleBtn.setAttribute('data-mode', newMode);
-
-      const modeLabel = newMode === 'modify' ? 'Modifications allowed' : 'Inspection only';
-      modeToggleBtn.setAttribute('aria-label', `Modification mode: ${modeLabel}`);
-      modeToggleBtn.setAttribute('title', `Modification mode: ${modeLabel}`);
-    });
-
-    // Theme Toggle Functionality
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    themeToggleBtn.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', newTheme);
-    });
-
-    // Settings Menu Toggle Functionality
-    const settingsBtn = document.getElementById('settings-toggle');
-    const settingsMenu = document.getElementById('settings-menu');
-
-    settingsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      settingsMenu.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', () => {
-      if (!settingsMenu.classList.contains('hidden')) {
-        settingsMenu.classList.add('hidden');
-      }
-    });
-
-    // Auto-expanding Textarea
-    const textarea = document.getElementById('prompt-input');
-    textarea.addEventListener('input', () => {
-      textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
-    });
-
     // Progress Bar Control for Working Message
     // To adjust progress, simply update the width style of the element with id 'working-progress'
     // Example: document.getElementById('working-progress').style.width = '67%';
 
+    /*
     // Options Selection Functionality
     const optionButtons = document.querySelectorAll('.option-btn');
     optionButtons.forEach(button => {
@@ -214,6 +96,18 @@
         const selectedOption = button.getAttribute('data-option');
         console.log('User selected option:', selectedOption);
       });
+    });
+  */
+  </script>
+
+  <script>
+    const go = new Go();
+    WebAssembly.instantiateStreaming(fetch("/main.wasm"), go.importObject)
+    .then((result) => {
+        go.run(result.instance);
+    })
+    .catch((err) => {
+        console.error("Failed to load Wasm:", err);
     });
   </script>
 </body>
