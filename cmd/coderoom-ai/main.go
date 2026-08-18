@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/xi0/coderoom-ai/web"
 	"net/http"
+
+	"github.com/xi0/coderoom-ai/web"
 )
 
 type webAsset struct {
@@ -27,6 +28,14 @@ var (
 		"/logo.png": webAsset{
 			mimeType: "image/png",
 			payload:  web.Logo,
+		},
+		"/main.wasm": webAsset{
+			mimeType: "application/wasm",
+			payload:  web.MainWASM,
+		},
+		"/wasm_exec.js": webAsset{
+			mimeType: "text/javascript",
+			payload:  web.WASMExec,
 		},
 	}
 )
