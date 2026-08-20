@@ -7,6 +7,10 @@ import (
 	"github.com/xi0/coderoom-ai/internal/browser"
 )
 
+var (
+	webSocket *browser.WebSocket
+)
+
 func init() {
 	doc := browser.Document()
 
@@ -24,6 +28,8 @@ func init() {
 	promptInput.AddInputHandler(adjustPromptHeight)
 
 	go initDone()
+
+	fmt.Printf("Location: %v\n", doc.Location())
 }
 
 func initDone() {
@@ -79,6 +85,11 @@ I propose implementing a new feature to enhance the user experience. This plan o
 	workingMessage.AddClass("hidden")
 
 	focusPrompt()
+
+	webSocket = browser.NewWebSocket()
+	for {
+		time.Sleep(60 * time.Minute)
+	}
 }
 
 func toggleMode(this, e *browser.Object) any {

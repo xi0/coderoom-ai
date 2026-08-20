@@ -145,3 +145,23 @@ func (s *Style) Width(value string) {
 func (s *Style) Height(value string) {
 	s.value.Set("height", value)
 }
+
+func (o *Object) Location() *Location {
+	l := o.value.Get("location")
+
+	return &Location{
+		Protocol: l.Get("protocol").String(),
+		Host:     l.Get("host").String(),
+		Hostname: l.Get("hostname").String(),
+		Port:     l.Get("port").String(),
+		Pathname: l.Get("pathname").String(),
+	}
+}
+
+type Location struct {
+	Protocol string
+	Host     string
+	Hostname string
+	Port     string
+	Pathname string
+}
