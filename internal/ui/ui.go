@@ -199,40 +199,28 @@ func handleInit(message *wire.InitMessage) {
 }
 
 func handleSystemMessage(markdown string) {
-	fmt.Println("handleSystemMessage")
-
 	addMessage(systemMessage(markdown))
 }
 
 func handleToolMessage(text string) {
-	fmt.Println("handleToolMessage")
-
 	addMessage(toolMessage(text))
 }
 
 func handleProposalMessage(markdown string) {
-	fmt.Println("handleProposalMessage")
-
 	addMessage(proposalMessage(markdown, sendConfirmation))
 }
 
 func sendConfirmation(confirmation bool) {
-	fmt.Printf("sendConfirmation: %t\n", confirmation)
-
 	webSocket.Send(wire.FrontendMessage{
 		Confirmation: &confirmation,
 	})
 }
 
 func handleOptionsMessage(message *wire.OptionsMessage) {
-	fmt.Println("handleOptionsMessage")
-
 	addMessage(optionsMessage(message.Description, message.Options, sendChosenOption))
 }
 
 func sendChosenOption(option int) {
-	fmt.Printf("sendChosenOption: %d\n", option)
-
 	webSocket.Send(wire.FrontendMessage{
 		ChosenOption: &option,
 	})
@@ -257,8 +245,6 @@ func handleWorkDone() {
 }
 
 func handleEnablePrompt() {
-	fmt.Println("handleEnablePrompt")
-
 	doc := browser.Document()
 
 	wrapper := doc.GetElementsByClassName("input-wrapper")[0]

@@ -33,7 +33,6 @@ func NewWebSocket(handlers MessageHandlers) *WebSocket {
 	location := Document().Location()
 	protocol := strings.Replace(location.Protocol, "http", "ws", 1)
 	url := fmt.Sprintf("%s//%s/chat", protocol, location.Host)
-	fmt.Printf("WebSocket URL: %s\n", url)
 
 	ws := Global().value.Get("WebSocket").New(url)
 	result := &WebSocket{
@@ -66,22 +65,17 @@ func NewWebSocket(handlers MessageHandlers) *WebSocket {
 }
 
 func (ws *WebSocket) onOpen() {
-	fmt.Println("onOpen")
 	ws.Open = true
 	go ws.keepAlive()
 }
 
 func (ws *WebSocket) onMessage(data string) {
-	fmt.Println("onMessage")
-	fmt.Printf("Received: %s\n", data)
-
 	var message wire.BackendMessage
 	if err := json.Unmarshal([]byte(data), &message); err != nil {
 		fmt.Printf("json.Unmarshal(): %v\n", err)
 	}
 
 	if message.Pong != nil {
-		fmt.Printf("Got pong: %d\n", message.Pong.Seq)
 		ws.lastPingSeq.Store(message.Pong.Seq)
 	}
 
@@ -112,12 +106,10 @@ func (ws *WebSocket) onMessage(data string) {
 }
 
 func (ws *WebSocket) onClose() {
-	fmt.Println("onClose")
 	ws.Open = false
 }
 
 func (ws *WebSocket) onError() {
-	fmt.Println("onError")
 	ws.Open = false
 }
 
