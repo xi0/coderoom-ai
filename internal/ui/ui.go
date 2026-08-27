@@ -38,6 +38,7 @@ func init() {
 func initDone() {
 	webSocket = browser.NewWebSocket(
 		browser.MessageHandlers{
+			Close:           handleClose,
 			Init:            handleInit,
 			SystemMessage:   handleSystemMessage,
 			ToolMessage:     handleToolMessage,
@@ -172,6 +173,21 @@ func submitPrompt(this, e *browser.Object) any {
 }
 
 // =============================================
+
+func handleClose(wasError bool) {
+	doc := browser.Document()
+	prompt := doc.GetElementByID("prompt-input")
+	prompt.Disabled(true)
+	wrapper := doc.GetElementsByClassName("input-wrapper")[0]
+	wrapper.RemoveClass("focus")
+
+	text := "Connection lost"
+	if wasError {
+		text += " due to error"
+	}
+
+	browser.Alert(text)
+}
 
 func handleInit(message *wire.InitMessage) {
 	doc := browser.Document()

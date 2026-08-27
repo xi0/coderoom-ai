@@ -12,6 +12,7 @@ import (
 )
 
 type MessageHandlers struct {
+	Close           func(bool)
 	Init            func(*wire.InitMessage)
 	SystemMessage   func(string)
 	ToolMessage     func(string)
@@ -107,10 +108,12 @@ func (ws *WebSocket) onMessage(data string) {
 
 func (ws *WebSocket) onClose() {
 	ws.Open = false
+	ws.handlers.Close(false)
 }
 
 func (ws *WebSocket) onError() {
 	ws.Open = false
+	ws.handlers.Close(true)
 }
 
 func (ws *WebSocket) Send(message wire.FrontendMessage) error {
@@ -138,6 +141,7 @@ func (ws *WebSocket) keepAlive() {
 		if seq != ws.lastPingSeq.Load() {
 			fmt.Printf("no response to last ping\n")
 			ws.Open = false
+			ws.handlers.Close(true)
 			return
 		}
 
