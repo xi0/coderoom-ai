@@ -168,11 +168,11 @@ html, body {
   color: var(--text-secondary);
 }
 
-.project-name {
+#project-name {
   font-weight: 600;
 }
 
-.project-dir {
+#project-dir {
   font-family: monospace;
   opacity: 0.8;
   white-space: nowrap;
@@ -497,7 +497,7 @@ html, body {
   gap: 8px;
 }
 
-.input-wrapper:focus-within {
+.input-wrapper.focus {
   border-color: var(--accent-color);
 }
 

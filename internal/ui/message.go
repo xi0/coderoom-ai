@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strconv"
 
 	b "github.com/xi0/coderoom-ai/internal/browser"
 
@@ -80,7 +81,31 @@ func toolMessage(tool string) *b.Object {
 
 }
 
-func proposalMessage(markdown string) *b.Object {
+func proposalMessage(markdown string, confirm func(bool)) *b.Object {
+	declineButton := b.Button(
+		[]string{"plan-btn", "plan-btn-decline"},
+		b.Text("Decline"),
+	)
+
+	declineButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		proposalMessageDone(this, false)
+		go confirm(false)
+		return nil
+	})
+
+	proceedButton := b.Button(
+		[]string{"plan-btn", "plan-btn-proceed"},
+		b.Text("Proceed"),
+	)
+
+	proceedButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		proposalMessageDone(this, true)
+		go confirm(true)
+		return nil
+	})
+
 	return b.Div(
 		[]string{"message", "system-message", "plan-message"},
 		b.Div(
@@ -96,21 +121,52 @@ func proposalMessage(markdown string) *b.Object {
 			),
 			b.Div(
 				[]string{"plan-actions"},
-				b.Button(
-					[]string{"plan-btn", "plan-btn-decline"},
-					b.Text("Decline"),
-				),
-				b.Button(
-					[]string{"plan-btn", "plan-btn-proceed"},
-					b.Text("Proceed"),
-				),
+				declineButton,
+				proceedButton,
 			),
 		),
 	)
 }
 
-func optionsMessage(options []string) *b.Object {
-	var buttons []*b.Object
+func proposalMessageDone(button *b.Object, confirmed bool) {
+	var text string
+	if confirmed {
+		text = "Proposal was accepted"
+	} else {
+		text = "Proposal was rejected"
+	}
+
+	doc := b.Document()
+	message := button.ClosestByClassName("plan-message")
+
+	actions := message.GetElementsByClassName("plan-actions")[0]
+	buttons := actions.GetElementsByTagName("button")
+	for _, b := range buttons {
+		b.Disabled(true)
+	}
+
+	actions.RemoveChildren()
+	actions.Append(b.P(
+		b.Text(text),
+	))
+
+	progress := doc.GetElementByID("working-progress")
+	progress.Style().Width(fmt.Sprintf("%d%%", 0))
+
+	workingMessage := doc.GetElementByID("working-message")
+	textElement := workingMessage.GetElementsByClassName("message-text")[0]
+	textElement.TextContent("Working...")
+
+	workingMessage.RemoveClass("hidden")
+	workingMessage.ScrollIntoView()
+}
+
+func optionsMessage(description string, options []string, sendOption func(int)) *b.Object {
+	buttons := []*b.Object{
+		b.P(
+			b.Text(description),
+		),
+	}
 
 	for i, o := range options {
 		button := b.Button(
@@ -118,9 +174,23 @@ func optionsMessage(options []string) *b.Object {
 			b.Text(o),
 		)
 		button.SetAttribute("data-option", fmt.Sprintf("%d", i))
+		button.AddClickHandler(optionClicked)
 
 		buttons = append(buttons, button)
 	}
+
+	proceedButton := b.Button(
+		[]string{"options-btn-proceed"},
+		b.Text("Proceed"),
+	)
+	proceedButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		option := optionsProceed(this)
+		if option != -1 {
+			go sendOption(option)
+		}
+		return nil
+	})
 
 	return b.Div(
 		[]string{"message", "system-message", "options-message"},
@@ -135,12 +205,74 @@ func optionsMessage(options []string) *b.Object {
 			),
 			b.Div(
 				[]string{"options-actions"},
-				b.Button(
-					[]string{"options-btn-proceed"},
-					b.Text("Proceed"),
-				),
+				proceedButton,
 			),
 		),
 	)
+}
 
+func optionClicked(this, e *b.Object) any {
+	e.PreventDefault()
+
+	parent := this.Parent()
+	buttons := parent.GetElementsByTagName("button")
+	for _, b := range buttons {
+		b.RemoveClass("selected")
+	}
+
+	this.AddClass("selected")
+
+	return nil
+}
+
+func optionsProceed(this *b.Object) int {
+
+	message := this.ClosestByClassName("options-message")
+	buttons := message.GetElementsByClassName("option-btn")
+
+	var option string
+	var optionText string
+	for _, b := range buttons {
+		if b.ContainsClass("selected") {
+			option = b.GetAttribute("data-option")
+			optionText = b.GetTextContent()
+		}
+	}
+
+	optionParsed := -1
+	var err error
+	optionParsed, err = strconv.Atoi(option)
+	if err != nil {
+		fmt.Printf("%s could not be parsed as an integer", option)
+	}
+
+	if option == "" || optionParsed == -1 {
+		b.Alert("No option selected")
+		return -1
+	}
+
+	for _, b := range buttons {
+		b.Disabled(true)
+	}
+	this.Disabled(true)
+
+	actions := message.GetElementsByClassName("options-actions")[0]
+	actions.RemoveChildren()
+	actions.Append(b.P(
+		b.Text(fmt.Sprintf("%q was selected", optionText)),
+	))
+
+	doc := b.Document()
+
+	progress := doc.GetElementByID("working-progress")
+	progress.Style().Width(fmt.Sprintf("%d%%", 0))
+
+	workingMessage := doc.GetElementByID("working-message")
+	textElement := workingMessage.GetElementsByClassName("message-text")[0]
+	textElement.TextContent("Working...")
+
+	workingMessage.RemoveClass("hidden")
+	workingMessage.ScrollIntoView()
+
+	return optionParsed
 }

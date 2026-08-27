@@ -11,13 +11,25 @@ import (
 	"github.com/xi0/coderoom-ai/internal/wire"
 )
 
+type MessageHandlers struct {
+	Init            func(*wire.InitMessage)
+	SystemMessage   func(string)
+	ToolMessage     func(string)
+	ProposalMessage func(string)
+	OptionsMessage  func(*wire.OptionsMessage)
+	UpdateProgress  func(*wire.ProgressMessage)
+	WorkDone        func()
+	EnablePrompt    func()
+}
+
 type WebSocket struct {
 	ws          js.Value
 	Open        bool
 	lastPingSeq *atomic.Int64
+	handlers    MessageHandlers
 }
 
-func NewWebSocket() *WebSocket {
+func NewWebSocket(handlers MessageHandlers) *WebSocket {
 	location := Document().Location()
 	protocol := strings.Replace(location.Protocol, "http", "ws", 1)
 	url := fmt.Sprintf("%s//%s/chat", protocol, location.Host)
@@ -25,7 +37,8 @@ func NewWebSocket() *WebSocket {
 
 	ws := Global().value.Get("WebSocket").New(url)
 	result := &WebSocket{
-		ws: ws,
+		ws:       ws,
+		handlers: handlers,
 	}
 
 	ws.Set("onopen", js.FuncOf(func(this js.Value, args []js.Value) any {
@@ -70,6 +83,31 @@ func (ws *WebSocket) onMessage(data string) {
 	if message.Pong != nil {
 		fmt.Printf("Got pong: %d\n", message.Pong.Seq)
 		ws.lastPingSeq.Store(message.Pong.Seq)
+	}
+
+	if message.Init != nil {
+		ws.handlers.Init(message.Init)
+	}
+	if message.SystemMessage != nil {
+		ws.handlers.SystemMessage(*message.SystemMessage)
+	}
+	if message.ToolMessage != nil {
+		ws.handlers.ToolMessage(*message.ToolMessage)
+	}
+	if message.ProposalMessage != nil {
+		ws.handlers.ProposalMessage(*message.ProposalMessage)
+	}
+	if message.OptionsMessage != nil {
+		ws.handlers.OptionsMessage(message.OptionsMessage)
+	}
+	if message.UpdateProgress != nil {
+		ws.handlers.UpdateProgress(message.UpdateProgress)
+	}
+	if message.WorkDone {
+		ws.handlers.WorkDone()
+	}
+	if message.EnablePrompt {
+		ws.handlers.EnablePrompt()
 	}
 }
 
@@ -124,6 +162,6 @@ func (ws *WebSocket) keepAlive() {
 			fmt.Printf("webSocket.Send(): %v", err)
 		}
 
-		time.Sleep(12 * time.Second)
+		time.Sleep(60 * time.Second)
 	}
 }
