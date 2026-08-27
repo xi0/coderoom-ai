@@ -489,7 +489,6 @@ html, body {
   width: 100%;
   max-width: 800px;
   display: flex;
-  align-items: flex-end;
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 10px;
