@@ -152,6 +152,8 @@ func submitPrompt(this, e *browser.Object) any {
 	wrapper := doc.GetElementsByClassName("input-wrapper")[0]
 	wrapper.RemoveClass("focus")
 
+	adjustPromptHeight(prompt, e)
+
 	modeToggle := doc.GetElementByID("mode-toggle")
 	mode := modeToggle.GetAttribute("data-mode")
 
