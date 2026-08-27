@@ -35,6 +35,10 @@ func Alert(text string) {
 	Global().value.Call("alert", text)
 }
 
+func Confirm(text string) bool {
+	return Global().value.Call("confirm", text).Bool()
+}
+
 func (o *Object) AddEventHandler(event string, h func(*Object, *Object) any) {
 	o.value.Call("addEventListener", event, js.FuncOf(
 		func(this js.Value, args []js.Value) any {
@@ -254,6 +258,7 @@ func (o *Object) Location() *Location {
 		Hostname: l.Get("hostname").String(),
 		Port:     l.Get("port").String(),
 		Pathname: l.Get("pathname").String(),
+		value:    l,
 	}
 }
 
@@ -263,4 +268,9 @@ type Location struct {
 	Hostname string
 	Port     string
 	Pathname string
+	value    js.Value
+}
+
+func (l *Location) Reload() {
+	l.value.Call("reload")
 }

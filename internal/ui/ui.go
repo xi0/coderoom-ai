@@ -19,6 +19,9 @@ func init() {
 	modeToggle := doc.GetElementByID("mode-toggle")
 	modeToggle.AddClickHandler(toggleMode)
 
+	resetSessionButton := doc.GetElementByID("reset-session-btn")
+	resetSessionButton.AddClickHandler(resetSession)
+
 	themeToggle := doc.GetElementByID("theme-toggle")
 	themeToggle.AddClickHandler(toggleTheme)
 
@@ -68,6 +71,14 @@ func toggleMode(this, e *browser.Object) any {
 	this.SetAttribute("data-mode", mode)
 	this.SetAttribute("aria-label", fmt.Sprintf("Modification mode: %s", modeLabel))
 	this.SetAttribute("title", fmt.Sprintf("Modification mode: %s", modeLabel))
+
+	return nil
+}
+
+func resetSession(this, e *browser.Object) any {
+	if browser.Confirm("Are you sure that you want to reset the session?") {
+		browser.Document().Location().Reload()
+	}
 
 	return nil
 }
