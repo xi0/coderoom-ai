@@ -1,2 +1,4 @@
 github.com/gomarkdown/markdown v0.0.0-20260818103853-6d1f24fc3a11 h1:ot6/Kp6yjtsQjxQVufBPmTNUKrnFZ88UD9gKV38dwFw=
 github.com/gomarkdown/markdown v0.0.0-20260818103853-6d1f24fc3a11/go.mod h1:JDGcbDT52eL4fju3sZ4TeHGsQwhG9nbDV21aMyhwPoA=
+github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
+github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=

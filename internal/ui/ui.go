@@ -2,9 +2,15 @@ package ui
 
 import (
 	"fmt"
-	"time"
+	"regexp"
 
 	"github.com/xi0/coderoom-ai/internal/browser"
+	"github.com/xi0/coderoom-ai/internal/wire"
+)
+
+var (
+	webSocket      *browser.WebSocket
+	onlyWhiteSpace = regexp.MustCompile("^\\s*$")
 )
 
 func init() {
@@ -12,6 +18,9 @@ func init() {
 
 	modeToggle := doc.GetElementByID("mode-toggle")
 	modeToggle.AddClickHandler(toggleMode)
+
+	resetSessionButton := doc.GetElementByID("reset-session-btn")
+	resetSessionButton.AddClickHandler(resetSession)
 
 	themeToggle := doc.GetElementByID("theme-toggle")
 	themeToggle.AddClickHandler(toggleTheme)
@@ -23,62 +32,26 @@ func init() {
 	promptInput := doc.GetElementByID("prompt-input")
 	promptInput.AddInputHandler(adjustPromptHeight)
 
+	sendButton := doc.GetElementByID("send-btn")
+	sendButton.AddClickHandler(submitPrompt)
+
 	go initDone()
 }
 
 func initDone() {
-	time.Sleep(2 * time.Second)
-
-	doc := browser.Document()
-
-	addMessage(systemMessage("Hello! I am Coderoom AI. How can I assist you with your code today?"))
-	setProgress(14)
-	time.Sleep(2 * time.Second)
-
-	addMessage(userMessage("Can you help me set up a responsive UI header and layout?"))
-	setProgress(29)
-	time.Sleep(2 * time.Second)
-
-	addMessage(systemMessage("Certainly! Here is a clean CSS Flexbox structure designed to stretch across the full viewport, feature a fixed header and expandable auto-resizing input box at the bottom."))
-	setProgress(43)
-	time.Sleep(2 * time.Second)
-
-	addMessage(toolMessage("read_file(\"html/some_interesting_file.html\")"))
-	setProgress(57)
-	time.Sleep(2 * time.Second)
-
-	addMessage(proposalMessage(`### Overview
-I propose implementing a new feature to enhance the user experience. This plan outlines the key steps and considerations.
-
-### Key Steps
-* **Phase 1:** Analyze current codebase structure</li>
-* **Phase 2:** Design the new component architecture</li>
-* **Phase 3:** Implement core functionality</li>
-* **Phase 4:** Add unit tests and documentation</li>
-
-### Expected Outcomes
-* Improved performance by 30%
-* Better code maintainability
-* Enhanced user interface responsiveness
-`))
-	setProgress(71)
-	time.Sleep(2 * time.Second)
-
-	addMessage(optionsMessage(
-		[]string{
-			"This is a much longer placeholder text option that is approximately five times longer than the original short option label",
-			"Another extended placeholder text option that provides more descriptive context for the user to understand what they are selecting",
-			"A third lengthy placeholder option with detailed information to help guide the user toward making an informed decision",
-			"The fourth and final extended placeholder option that maintains consistency with the other verbose option descriptions",
+	webSocket = browser.NewWebSocket(
+		browser.MessageHandlers{
+			Close:           handleClose,
+			Init:            handleInit,
+			SystemMessage:   handleSystemMessage,
+			ToolMessage:     handleToolMessage,
+			ProposalMessage: handleProposalMessage,
+			OptionsMessage:  handleOptionsMessage,
+			UpdateProgress:  handleUpdateProgress,
+			WorkDone:        handleWorkDone,
+			EnablePrompt:    handleEnablePrompt,
 		},
-	))
-	setProgress(86)
-	time.Sleep(2 * time.Second)
-
-	workingMessage := doc.GetElementByID("working-message")
-	workingMessage.AddClass("hidden")
-
-	focusPrompt()
+	)
 }
 
 func toggleMode(this, e *browser.Object) any {
@@ -98,6 +71,14 @@ func toggleMode(this, e *browser.Object) any {
 	this.SetAttribute("data-mode", mode)
 	this.SetAttribute("aria-label", fmt.Sprintf("Modification mode: %s", modeLabel))
 	this.SetAttribute("title", fmt.Sprintf("Modification mode: %s", modeLabel))
+
+	return nil
+}
+
+func resetSession(this, e *browser.Object) any {
+	if browser.Confirm("Are you sure that you want to reset the session?") {
+		browser.Document().Location().Reload()
+	}
 
 	return nil
 }
@@ -151,16 +132,154 @@ func adjustPromptHeight(this, e *browser.Object) any {
 	return nil
 }
 
-func setProgress(percent int) {
+// =============================================
+
+func submitPrompt(this, e *browser.Object) any {
+	e.PreventDefault()
+
+	doc := browser.Document()
+	prompt := doc.GetElementByID("prompt-input")
+
+	text := prompt.GetValue()
+	if onlyWhiteSpace.MatchString(text) {
+		return nil
+	}
+
+	prompt.Disabled(true)
+	addMessage(userMessage(text))
+	prompt.SetValue("")
+
+	wrapper := doc.GetElementsByClassName("input-wrapper")[0]
+	wrapper.RemoveClass("focus")
+
+	adjustPromptHeight(prompt, e)
+
+	modeToggle := doc.GetElementByID("mode-toggle")
+	mode := modeToggle.GetAttribute("data-mode")
+
+	modifications := false
+	if mode == "modify" {
+		modifications = true
+	}
+
+	message := wire.FrontendMessage{
+		Modifications: modifications,
+		Prompt:        &text,
+	}
+
+	err := webSocket.Send(message)
+	if err != nil {
+		fmt.Printf("webSocket.Send(): %v", err)
+	}
+
+	progress := doc.GetElementByID("working-progress")
+	progress.Style().Width(fmt.Sprintf("%d%%", 0))
+
+	workingMessage := doc.GetElementByID("working-message")
+	textElement := workingMessage.GetElementsByClassName("message-text")[0]
+	textElement.TextContent("Working...")
+
+	workingMessage.RemoveClass("hidden")
+	workingMessage.ScrollIntoView()
+
+	return nil
+}
+
+// =============================================
+
+func handleClose(wasError bool) {
+	doc := browser.Document()
+	prompt := doc.GetElementByID("prompt-input")
+	prompt.Disabled(true)
+	wrapper := doc.GetElementsByClassName("input-wrapper")[0]
+	wrapper.RemoveClass("focus")
+
+	text := "Connection lost"
+	if wasError {
+		text += " due to error"
+	}
+
+	browser.Alert(text)
+}
+
+func handleInit(message *wire.InitMessage) {
+	doc := browser.Document()
+	button := doc.GetElementByID("mode-toggle")
+	mode := button.GetAttribute("data-mode")
+	var modeLabel string
+
+	if message.Modifications {
+		mode = "modify"
+		modeLabel = "Modifications allowed"
+	} else {
+		mode = "inspect"
+		modeLabel = "Inspection only"
+	}
+
+	button.SetAttribute("data-mode", mode)
+	button.SetAttribute("aria-label", fmt.Sprintf("Modification mode: %s", modeLabel))
+	button.SetAttribute("title", fmt.Sprintf("Modification mode: %s", modeLabel))
+
+	name := doc.GetElementByID("project-name")
+	name.TextContent(message.ProjectName)
+
+	dir := doc.GetElementByID("project-dir")
+	dir.TextContent(message.ProjectDir)
+}
+
+func handleSystemMessage(markdown string) {
+	addMessage(systemMessage(markdown))
+}
+
+func handleToolMessage(text string) {
+	addMessage(toolMessage(text))
+}
+
+func handleProposalMessage(markdown string) {
+	addMessage(proposalMessage(markdown, sendConfirmation))
+}
+
+func sendConfirmation(confirmation bool) {
+	webSocket.Send(wire.FrontendMessage{
+		Confirmation: &confirmation,
+	})
+}
+
+func handleOptionsMessage(message *wire.OptionsMessage) {
+	addMessage(optionsMessage(message.Description, message.Options, sendChosenOption))
+}
+
+func sendChosenOption(option int) {
+	webSocket.Send(wire.FrontendMessage{
+		ChosenOption: &option,
+	})
+}
+
+func handleUpdateProgress(message *wire.ProgressMessage) {
 	doc := browser.Document()
 
 	progress := doc.GetElementByID("working-progress")
-	progress.Style().Width(fmt.Sprintf("%d%%", percent))
+	progress.Style().Width(fmt.Sprintf("%d%%", message.Percent))
+
+	workingMessage := doc.GetElementByID("working-message")
+	text := workingMessage.GetElementsByClassName("message-text")[0]
+	text.TextContent(message.Text)
 }
 
-func focusPrompt() {
+func handleWorkDone() {
 	doc := browser.Document()
 
+	workingMessage := doc.GetElementByID("working-message")
+	workingMessage.AddClass("hidden")
+}
+
+func handleEnablePrompt() {
+	doc := browser.Document()
+
+	wrapper := doc.GetElementsByClassName("input-wrapper")[0]
+	wrapper.AddClass("focus")
+
 	prompt := doc.GetElementByID("prompt-input")
+	prompt.Disabled(false)
 	prompt.Focus()
 }

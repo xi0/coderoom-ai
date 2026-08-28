@@ -168,11 +168,11 @@ html, body {
   color: var(--text-secondary);
 }
 
-.project-name {
+#project-name {
   font-weight: 600;
 }
 
-.project-dir {
+#project-dir {
   font-family: monospace;
   opacity: 0.8;
   white-space: nowrap;
@@ -291,7 +291,7 @@ html, body {
   gap: 12px;
 }
 
-.plan-message h3 {
+.message-content h3 {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -300,7 +300,7 @@ html, body {
   padding-bottom: 8px;
 }
 
-.plan-message h4 {
+.message-content h4 {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -314,25 +314,25 @@ html, body {
   margin: 0;
 }
 
-.plan-message em {
+.message-content em {
   font-style: italic;
   color: var(--text-secondary);
 }
 
-.plan-message ul {
+.message-content ul {
   list-style-type: disc;
   padding-left: 20px;
   margin: 4px 0;
 }
 
-.plan-message li {
+.message-content li {
   font-size: 0.9rem;
   color: var(--text-primary);
   line-height: 1.5;
   margin: 4px 0;
 }
 
-.plan-message li strong {
+.message-content li strong {
   color: var(--accent-color);
 }
 
@@ -497,7 +497,7 @@ html, body {
   gap: 8px;
 }
 
-.input-wrapper:focus-within {
+.input-wrapper.focus {
   border-color: var(--accent-color);
 }
 

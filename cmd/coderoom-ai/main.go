@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/xi0/coderoom-ai/internal/backend"
 	"github.com/xi0/coderoom-ai/web"
 )
 
@@ -14,7 +15,8 @@ type webAsset struct {
 }
 
 var (
-	port = flag.Int("port", 8037, "")
+	port     = flag.Int("port", 8037, "TCP port to listen on")
+	testMode = flag.Bool("testmode", false, "run the backend in test mode")
 
 	staticAssets = map[string]webAsset{
 		"/": webAsset{
@@ -52,9 +54,18 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	flag.Parse()
+
 	fmt.Printf("Starting a web server on http://localhost:%d/\n", *port)
 
+	if *testMode {
+		backend.SetBackend(&backend.TestBackend{})
+	} else {
+		backend.SetBackend(&backend.OpenAI{})
+	}
+
 	http.HandleFunc("/", serveHTTP)
+	http.HandleFunc("/chat", backend.ServeHTTP)
 
 	http.ListenAndServe(fmt.Sprintf("localhost:%d", *port), nil)
 }
