@@ -25,7 +25,7 @@ Most of the other design considerations are centered around security.
 coderoom-ai/
 ├── cmd/
 │   └── coderoom-ai/          # Main application entry point
-├── internal/                  # Private application code
+├── internal/                 # Private application code
 │   ├── backend/              # Backend implementations (OpenAI, test backend, WebSocket)
 │   ├── browser/              # Browser interaction layer (DOM elements, objects, WebSocket)
 │   ├── ui/                   # UI logic and message handling
