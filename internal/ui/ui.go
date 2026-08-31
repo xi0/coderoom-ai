@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"time"
 
 	"github.com/xi0/coderoom-ai/internal/browser"
 	"github.com/xi0/coderoom-ai/internal/wire"
@@ -16,6 +17,29 @@ var (
 	webSocket      *browser.WebSocket
 	onlyWhiteSpace = regexp.MustCompile("^\\s*$")
 )
+
+func butterbar(message string, isSuccess bool) {
+	doc := browser.Document()
+	bar := doc.GetElementByID("butterbar")
+
+	bar.RemoveClass("hidden")
+	bar.RemoveClass("success")
+	bar.RemoveClass("error")
+
+	if isSuccess {
+		bar.AddClass("success")
+	} else {
+		bar.AddClass("error")
+	}
+
+	bar.TextContent(message)
+
+	// Hide the butterbar after 3 seconds
+	go func() {
+		time.Sleep(3 * time.Second)
+		bar.AddClass("hidden")
+	}()
+}
 
 func init() {
 	doc := browser.Document()
@@ -224,13 +248,14 @@ func saveGlobalSettings(this, e *browser.Object) any {
 		resp, err := http.DefaultClient.Post(url, "application/json", bytes.NewBuffer(data))
 		if err != nil {
 			fmt.Printf("Post(): %v\n", err)
+			butterbar("Global settings NOT saved", false)
 			return
 		}
 
 		if resp.StatusCode == http.StatusOK {
-			browser.Alert("Global settings saved")
+			butterbar("Global settings saved", true)
 		} else {
-			browser.Alert("Global settings NOT saved")
+			butterbar("Global settings NOT saved", false)
 		}
 	}()
 
