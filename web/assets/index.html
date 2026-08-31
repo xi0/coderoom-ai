@@ -78,27 +78,13 @@
     </footer>
   </div>
 
-  <script>
-    // Progress Bar Control for Working Message
-    // To adjust progress, simply update the width style of the element with id 'working-progress'
-    // Example: document.getElementById('working-progress').style.width = '67%';
-
-    /*
-    // Options Selection Functionality
-    const optionButtons = document.querySelectorAll('.option-btn');
-    optionButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        // Remove selected class from all buttons
-        optionButtons.forEach(btn => btn.classList.remove('selected'));
-        // Add selected class to clicked button
-        button.classList.add('selected');
-        // Log the selected option (can be customized for actual use)
-        const selectedOption = button.getAttribute('data-option');
-        console.log('User selected option:', selectedOption);
-      });
-    });
-  */
-  </script>
+  <dialog closedby="any" id="global-settings">
+    <h2>Global Settings</h2>
+    <form method="dialog">
+      <textarea rows="5" cols="100"></textarea><br />
+      <button>Save config</button>
+    </form>
+  </dialog>
 
   <script>
     const go = new Go();

@@ -237,6 +237,14 @@ func (o *Object) Style() *Style {
 	}
 }
 
+func (o *Object) ShowModal() {
+	o.value.Call("showModal")
+}
+
+func (o *Object) Close() {
+	o.value.Call("close")
+}
+
 type Style struct {
 	value js.Value
 }

@@ -1,7 +1,11 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"regexp"
 
 	"github.com/xi0/coderoom-ai/internal/browser"
@@ -16,6 +20,8 @@ var (
 func init() {
 	doc := browser.Document()
 
+	// Add handlers for main controls
+
 	modeToggle := doc.GetElementByID("mode-toggle")
 	modeToggle.AddClickHandler(toggleMode)
 
@@ -29,11 +35,24 @@ func init() {
 	settingsToggle.AddClickHandler(toggleSettings)
 	doc.AddClickHandler(hideSettings)
 
+	settingsMenu := doc.GetElementByID("settings-menu")
+	menuButtons := settingsMenu.GetElementsByTagName("button")
+	menuButtons[0].AddClickHandler(globalSettings)
+	menuButtons[1].AddClickHandler(projectSettings)
+
+	// Add handlers for prompt input
+
 	promptInput := doc.GetElementByID("prompt-input")
 	promptInput.AddInputHandler(adjustPromptHeight)
 
 	sendButton := doc.GetElementByID("send-btn")
 	sendButton.AddClickHandler(submitPrompt)
+
+	// Add handlers for settings dialogs
+
+	dialog := doc.GetElementByID("global-settings")
+	saveGlobalSettingsButton := dialog.GetElementsByTagName("button")[0]
+	saveGlobalSettingsButton.AddClickHandler(saveGlobalSettings)
 
 	go initDone()
 }
@@ -97,7 +116,34 @@ func toggleTheme(this, e *browser.Object) any {
 
 	documentElement.SetAttribute("data-theme", theme)
 
+	go saveTheme(theme)
+
 	return nil
+}
+
+func saveTheme(theme string) {
+	values := url.Values{}
+	if theme == "dark" {
+		values.Set("dark_theme", "1")
+	} else {
+		values.Set("dark_theme", "0")
+	}
+
+	location := browser.Document().Location()
+	url := fmt.Sprintf("%s//%s/settings/global/theme", location.Protocol, location.Host)
+
+	resp, err := http.DefaultClient.PostForm(url, values)
+
+	if err != nil {
+		fmt.Printf("PostForm(): %v\n", err)
+		return
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		return
+	}
+
+	fmt.Printf("Post to URL %q failed with status %q\n", url, resp.Status)
 }
 
 func toggleSettings(this, e *browser.Object) any {
@@ -118,6 +164,81 @@ func hideSettings(this, e *browser.Object) any {
 		menu.AddClass("hidden")
 	}
 
+	return nil
+}
+
+func globalSettings(this, e *browser.Object) any {
+	fmt.Println("globalSettings")
+
+	doc := browser.Document()
+	dialog := doc.GetElementByID("global-settings")
+	dialog.ShowModal()
+
+	go loadGlobalSettings()
+
+	return nil
+}
+
+func loadGlobalSettings() {
+	doc := browser.Document()
+	dialog := doc.GetElementByID("global-settings")
+
+	location := browser.Document().Location()
+	url := fmt.Sprintf("%s//%s/settings/global", location.Protocol, location.Host)
+
+	resp, err := http.DefaultClient.Get(url)
+	if err != nil {
+		fmt.Printf("Get(): %v\n", err)
+		return
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("io.ReadAll(): %v", err)
+			return
+		}
+
+		textArea := dialog.GetElementsByTagName("textarea")[0]
+		textArea.RemoveChildren()
+		textArea.Append(browser.Text(string(data)))
+		return
+	}
+
+	fmt.Printf("Post to URL %q failed with status %q\n", url, resp.Status)
+}
+
+func saveGlobalSettings(this, e *browser.Object) any {
+	doc := browser.Document()
+	dialog := doc.GetElementByID("global-settings")
+
+	fmt.Println("saveGlobalSettings")
+
+	location := browser.Document().Location()
+	url := fmt.Sprintf("%s//%s/settings/global", location.Protocol, location.Host)
+
+	textArea := dialog.GetElementsByTagName("textarea")[0]
+	data := []byte(textArea.GetValue())
+
+	go func() {
+		resp, err := http.DefaultClient.Post(url, "application/json", bytes.NewBuffer(data))
+		if err != nil {
+			fmt.Printf("Post(): %v\n", err)
+			return
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			browser.Alert("Global settings saved")
+		} else {
+			browser.Alert("Global settings NOT saved")
+		}
+	}()
+
+	return nil
+}
+
+func projectSettings(this, e *browser.Object) any {
+	fmt.Println("projectSettings")
 	return nil
 }
 
@@ -219,6 +340,13 @@ func handleInit(message *wire.InitMessage) {
 	button.SetAttribute("data-mode", mode)
 	button.SetAttribute("aria-label", fmt.Sprintf("Modification mode: %s", modeLabel))
 	button.SetAttribute("title", fmt.Sprintf("Modification mode: %s", modeLabel))
+
+	if !message.DarkTheme {
+		documentElement := browser.DocumentElement()
+		theme := documentElement.GetAttribute("data-theme")
+		theme = "light"
+		documentElement.SetAttribute("data-theme", theme)
+	}
 
 	name := doc.GetElementByID("project-name")
 	name.TextContent(message.ProjectName)

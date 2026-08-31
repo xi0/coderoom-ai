@@ -531,6 +531,31 @@ html, body {
   background-color: var(--accent-hover);
 }
 
+dialog {
+  /* Fits the modal directly to its content */
+  width: fit-content;
+  height: fit-content;
+
+  /* Sets maximum bounds so large content doesn't overflow the viewport */
+  max-width: 90vw;
+  max-height: 90vh;
+
+  /* Removes browser default border and adds clean rounding/shadow */
+  border: none;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+  /* Keeps centering consistent if margin defaults are overridden */
+  margin: auto;
+}
+
+/* Optional: Dim the background when opened with .showModal() */
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
 /* Responsiveness Adjustments */
 @media (max-width: 600px) {
   .top-bar-line2 {

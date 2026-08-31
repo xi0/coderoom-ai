@@ -18,7 +18,9 @@ var (
 	}
 )
 
-type TestBackend struct{}
+type TestBackend struct {
+	Settings *Settings
+}
 
 func (be *TestBackend) Run(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage) {
 	log.Println("Test backend")
@@ -46,7 +48,8 @@ You can use the following keywords to test different message types in the UI.
 
 	writeChannel <- wire.BackendMessage{
 		Init: &wire.InitMessage{
-			Modifications: true,
+			Modifications: be.Settings.GetDefaultModifications(),
+			DarkTheme:     be.Settings.GetDarkTheme(),
 			ProjectName:   "Coderoom AI",
 			ProjectDir:    "/home/xi/projects/coderoom-ai",
 		},
