@@ -51,10 +51,18 @@ type PingMessage struct {
 // Settings messages
 
 type GlobalSettings struct {
-	Version              int      `json:"version"`
-	DefaultModifications bool     `json:"default_modifications"`
-	DarkTheme            bool     `json:"dark_theme"`
-	AllowedDirs          []string `json:"allowed_dirs"`
+	Version              int                `json:"version"`
+	DefaultModifications bool               `json:"default_modifications"`
+	DarkTheme            bool               `json:"dark_theme"`
+	AllowedDirs          []string           `json:"allowed_dirs"`
+	Providers            []ProviderSettings `json:"providers"`
+}
+
+type ProviderSettings struct {
+	ProviderID string `json:"provider_id"`
+	ModelID    string `json:"model_id"`
+	APIKey     string `json:"api_key"`
+	Default    bool   `json:"default"`
 }
 
 type ProjectSettings struct {
