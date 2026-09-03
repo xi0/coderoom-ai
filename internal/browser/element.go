@@ -4,6 +4,12 @@ import (
 	"strings"
 )
 
+const (
+	InputTypeText     = "text"
+	InputTypePassword = "password"
+	InputTypeCheckbox = "checkbox"
+)
+
 func element(elementType string, classes []string, children []*Object) *Object {
 	e := Document().value.Call("createElement", elementType)
 
@@ -54,6 +60,17 @@ func UL(children ...*Object) *Object {
 
 func LI(children ...*Object) *Object {
 	return element("li", nil, children)
+}
+
+func Input(classes []string, inputType, value string) *Object {
+	o := element("input", classes, nil)
+	o.value.Call("setAttribute", "type", inputType)
+	o.value.Call("setAttribute", "value", value)
+	return o
+}
+
+func Label(classes []string, children ...*Object) *Object {
+	return element("label", nil, children)
 }
 
 func Button(classes []string, children ...*Object) *Object {

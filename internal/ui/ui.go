@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -74,9 +75,11 @@ func init() {
 
 	// Add handlers for settings dialogs
 
-	dialog := doc.GetElementByID("global-settings")
-	saveGlobalSettingsButton := dialog.GetElementsByTagName("button")[0]
+	saveGlobalSettingsButton := doc.GetElementByID("save-global-settings-btn")
 	saveGlobalSettingsButton.AddClickHandler(saveGlobalSettings)
+
+	addProviderBtn := doc.GetElementByID("add-provider-btn")
+	addProviderBtn.AddClickHandler(addProvider)
 
 	go initDone()
 }
@@ -192,8 +195,6 @@ func hideSettings(this, e *browser.Object) any {
 }
 
 func globalSettings(this, e *browser.Object) any {
-	fmt.Println("globalSettings")
-
 	doc := browser.Document()
 	dialog := doc.GetElementByID("global-settings")
 	dialog.ShowModal()
@@ -205,7 +206,6 @@ func globalSettings(this, e *browser.Object) any {
 
 func loadGlobalSettings() {
 	doc := browser.Document()
-	dialog := doc.GetElementByID("global-settings")
 
 	location := browser.Document().Location()
 	url := fmt.Sprintf("%s//%s/settings/global", location.Protocol, location.Host)
@@ -216,36 +216,76 @@ func loadGlobalSettings() {
 		return
 	}
 
-	if resp.StatusCode == http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Printf("io.ReadAll(): %v", err)
-			return
-		}
-
-		textArea := dialog.GetElementsByTagName("textarea")[0]
-		textArea.RemoveChildren()
-		textArea.Append(browser.Text(string(data)))
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Get from URL %q failed with status %q\n", url, resp.Status)
 		return
 	}
 
-	fmt.Printf("Post to URL %q failed with status %q\n", url, resp.Status)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("io.ReadAll(): %v", err)
+		return
+	}
+
+	var settings wire.GlobalSettings
+	if err := json.Unmarshal(data, &settings); err != nil {
+		fmt.Printf("JSON unmarshal error: %v\n", err)
+		return
+	}
+
+	// Set default modifications checkbox
+	defaultModCheckbox := doc.GetElementByID("default-modifications")
+	if settings.DefaultModifications {
+		defaultModCheckbox.SetChecked(true)
+	} else {
+		defaultModCheckbox.SetChecked(false)
+	}
+
+	// Render providers
+	renderProviders(settings.Providers)
+
+	// Render allowed directories
+	renderAllowedDirs(settings.AllowedDirs)
 }
 
 func saveGlobalSettings(this, e *browser.Object) any {
 	doc := browser.Document()
 	dialog := doc.GetElementByID("global-settings")
 
-	fmt.Println("saveGlobalSettings")
+	// Get default modifications setting
+	defaultModCheckbox := doc.GetElementByID("default-modifications")
+	defaultModifications := defaultModCheckbox.GetChecked()
+
+	// Get dark theme from document element
+	documentElement := browser.DocumentElement()
+	theme := documentElement.GetAttribute("data-theme")
+	darkTheme := theme == "dark"
+
+	// Collect providers
+	providers := collectProviders()
+
+	// Collect allowed directories
+	allowedDirs := collectAllowedDirs()
+
+	settings := wire.GlobalSettings{
+		DefaultModifications: defaultModifications,
+		DarkTheme:            darkTheme,
+		Providers:            providers,
+		AllowedDirs:          allowedDirs,
+	}
+
+	jsonData, err := json.Marshal(settings)
+	if err != nil {
+		fmt.Printf("JSON marshal error: %v\n", err)
+		butterbar("Global settings NOT saved", false)
+		return nil
+	}
 
 	location := browser.Document().Location()
 	url := fmt.Sprintf("%s//%s/settings/global", location.Protocol, location.Host)
 
-	textArea := dialog.GetElementsByTagName("textarea")[0]
-	data := []byte(textArea.GetValue())
-
 	go func() {
-		resp, err := http.DefaultClient.Post(url, "application/json", bytes.NewBuffer(data))
+		resp, err := http.DefaultClient.Post(url, "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Printf("Post(): %v\n", err)
 			butterbar("Global settings NOT saved", false)
@@ -254,6 +294,7 @@ func saveGlobalSettings(this, e *browser.Object) any {
 
 		if resp.StatusCode == http.StatusOK {
 			butterbar("Global settings saved", true)
+			dialog.Close()
 		} else {
 			butterbar("Global settings NOT saved", false)
 		}
@@ -435,4 +476,453 @@ func handleEnablePrompt() {
 	prompt := doc.GetElementByID("prompt-input")
 	prompt.Disabled(false)
 	prompt.Focus()
+}
+
+// =============================================
+// Global Settings Helper Functions
+// =============================================
+
+func renderProviders(providers []wire.ProviderSettings) {
+	doc := browser.Document()
+	providersList := doc.GetElementByID("providers-list")
+	providersList.RemoveChildren()
+
+	for i, provider := range providers {
+		providerItem := createProviderElement(provider, i)
+		providersList.Append(providerItem)
+	}
+}
+
+func createProviderElement(provider wire.ProviderSettings, index int) *browser.Object {
+	providerInfo := browser.Div(
+		[]string{"provider-info"},
+		browser.Div(
+			[]string{"provider-name"},
+			browser.Text(provider.ProviderID),
+		),
+		browser.Div(
+			[]string{"provider-model"},
+			browser.Text(provider.ModelID),
+		),
+	)
+
+	if provider.Default {
+		providerInfo.Append(
+			browser.Span(
+				[]string{"provider-default-badge"},
+				browser.Text("Default"),
+			),
+		)
+	}
+
+	editBtn := browser.Button(
+		nil,
+		browser.Text("Edit"),
+	)
+	editBtn.AddClickHandler(toggleProviderEdit)
+
+	providerActions := browser.Div(
+		[]string{"provider-actions"},
+		editBtn,
+	)
+
+	providerHeader := browser.Div(
+		[]string{"provider-header"},
+		providerInfo,
+		providerActions,
+	)
+
+	defaultCheckbox := browser.Input(
+		[]string{"provider-default-checkbox"},
+		browser.InputTypeCheckbox,
+		fmt.Sprintf("%d", index),
+	)
+	if provider.Default {
+		defaultCheckbox.SetChecked(true)
+	}
+
+	cancelBtn := browser.Button(
+		[]string{"secondary-btn"},
+		browser.Text("Cancel"),
+	)
+	cancelBtn.AddClickHandler(toggleProviderEdit)
+
+	saveBtn := browser.Button(
+		nil,
+		browser.Text("Save"),
+	)
+	saveBtn.AddClickHandler(saveProvider)
+
+	deleteBtn := browser.Button(
+		[]string{"delete-btn"},
+		browser.Text("Delete"),
+	)
+	deleteBtn.AddClickHandler(deleteProvider)
+
+	editSection := browser.Div(
+		[]string{"provider-edit-section"},
+		browser.Div(
+			[]string{"form-group"},
+			browser.Label(
+				nil,
+				browser.Text("Provider ID"),
+			),
+			browser.Input(
+				[]string{"provider-id-input"},
+				browser.InputTypeText,
+				provider.ProviderID,
+			),
+		),
+		browser.Div(
+			[]string{"form-group"},
+			browser.Label(
+				nil,
+				browser.Text("Model ID"),
+			),
+			browser.Input(
+				[]string{"model-id-input"},
+				browser.InputTypeText,
+				provider.ModelID,
+			),
+		),
+		browser.Div(
+			[]string{"form-group"},
+			browser.Label(
+				nil,
+				browser.Text("API Key"),
+			),
+			browser.Input(
+				[]string{"api-key-input"},
+				browser.InputTypePassword,
+				provider.APIKey,
+			),
+		),
+		browser.Label(
+			[]string{"checkbox-label"},
+			defaultCheckbox,
+			browser.Span(
+				nil,
+				browser.Text(" Set as default provider"),
+			),
+		),
+		browser.Div(
+			[]string{"provider-edit-actions"},
+			cancelBtn,
+			saveBtn,
+			deleteBtn,
+		),
+	)
+	editSection.SetAttribute("data-index", fmt.Sprintf("%d", index))
+
+	providerItem := browser.Div(
+		[]string{"provider-item"},
+		providerHeader,
+		editSection,
+	)
+	providerItem.SetAttribute("data-index", fmt.Sprintf("%d", index))
+
+	return providerItem
+}
+
+func toggleProviderEdit(this, e *browser.Object) any {
+	doc := browser.Document()
+
+	providerItem := this.ClosestByClassName("provider-item")
+	if providerItem == nil {
+		return nil
+	}
+
+	index := providerItem.GetAttribute("data-index")
+
+	providersList := doc.GetElementByID("providers-list")
+
+	var editSection *browser.Object
+
+	editSections := providersList.GetElementsByClassName("provider-edit-section")
+	for _, es := range editSections {
+		if es.GetAttribute("data-index") == index {
+			editSection = es
+		}
+	}
+	if editSection == nil {
+		return nil
+	}
+
+	providerActions := providerItem.GetElementsByClassName("provider-actions")[0]
+	buttons := providerActions.GetElementsByTagName("button")
+
+	providerEditActions := editSection.GetElementsByClassName("provider-edit-actions")[0]
+	buttons = append(buttons, providerEditActions.GetElementsByTagName("button")[0])
+
+	inputs := providerItem.GetElementsByTagName("input")
+
+	expand := false
+	if !editSection.HasClass("expanded") {
+		expand = true
+		editSection.AddClass("expanded")
+	} else {
+		if providerItem.GetAttribute("data-new") == "true" {
+			providerItem.Remove()
+			return nil
+		}
+
+		editSection.RemoveClass("expanded")
+	}
+
+	for _, input := range inputs {
+		if expand {
+			saveInputValue(input)
+		} else {
+			restoreInputValue(input)
+		}
+	}
+
+	for _, button := range buttons {
+		if expand {
+			button.TextContent("Cancel")
+		} else {
+			button.TextContent("Edit")
+		}
+	}
+
+	return nil
+}
+
+func saveInputValue(input *browser.Object) {
+	switch input.GetAttribute("type") {
+	case browser.InputTypeText:
+		input.SetAttribute("data-saved", input.GetValue())
+	case browser.InputTypePassword:
+		input.SetAttribute("data-saved", input.GetValue())
+	case browser.InputTypeCheckbox:
+		checked := "false"
+		if input.GetChecked() {
+			checked = "true"
+		}
+		input.SetAttribute("data-saved", checked)
+	default:
+		fmt.Printf("saveInputValue() does not handle input type %q\n", input.GetAttribute("type"))
+	}
+}
+
+func restoreInputValue(input *browser.Object) {
+	switch input.GetAttribute("type") {
+	case browser.InputTypeText:
+		input.SetValue(input.GetAttribute("data-saved"))
+	case browser.InputTypePassword:
+		input.SetValue(input.GetAttribute("data-saved"))
+	case browser.InputTypeCheckbox:
+		checked := false
+		if input.GetAttribute("data-saved") == "true" {
+			checked = true
+		}
+		input.SetChecked(checked)
+	default:
+		fmt.Printf("saveInputValue() does not handle input type %q\n", input.GetAttribute("type"))
+	}
+}
+
+func saveProvider(this, e *browser.Object) any {
+	doc := browser.Document()
+	providerItem := this.ClosestByClassName("provider-item")
+	if providerItem == nil {
+		return nil
+	}
+
+	providerItem.RemoveAttribute("data-new")
+
+	// Get input values
+	providerIDInput := providerItem.GetElementsByClassName("provider-id-input")[0]
+	modelIDInput := providerItem.GetElementsByClassName("model-id-input")[0]
+	defaultCheckbox := providerItem.GetElementsByClassName("provider-default-checkbox")[0]
+
+	providerID := providerIDInput.GetValue()
+	modelID := modelIDInput.GetValue()
+	isDefault := defaultCheckbox.GetChecked()
+
+	// Update provider info display
+	providerName := providerItem.GetElementsByClassName("provider-name")[0]
+	providerModel := providerItem.GetElementsByClassName("provider-model")[0]
+	providerName.TextContent(providerID)
+	providerModel.TextContent(modelID)
+
+	// Remove existing default badge
+	existingBadges := providerItem.GetElementsByClassName("provider-default-badge")
+	if len(existingBadges) > 0 {
+		existingBadges[0].Remove()
+	}
+
+	// Add default badge if applicable
+	if isDefault {
+		// Remove default from all other providers
+		allDefaultCheckboxes := doc.GetElementsByClassName("provider-default-checkbox")
+		for i := 0; i < len(allDefaultCheckboxes); i++ {
+			checkbox := allDefaultCheckboxes[i]
+			if checkbox.GetValue() != defaultCheckbox.GetValue() {
+				checkbox.SetChecked(false)
+			}
+		}
+
+		// Remove all existing default badges
+		allBadges := doc.GetElementsByClassName("provider-default-badge")
+		for i := 0; i < len(allBadges); i++ {
+			allBadges[i].Remove()
+		}
+
+		// Add badge to this provider
+		providerInfo := providerItem.GetElementsByClassName("provider-info")[0]
+		providerInfo.Append(
+			browser.Span(
+				[]string{"provider-default-badge"},
+				browser.Text("Default"),
+			),
+		)
+	}
+
+	// Close edit section
+	editSection := providerItem.GetElementsByClassName("provider-edit-section")[0]
+	editSection.RemoveClass("expanded")
+
+	// Update edit button text
+	providerActions := providerItem.GetElementsByClassName("provider-actions")[0]
+	editBtn := providerActions.GetElementsByTagName("button")[0]
+	if editBtn != nil {
+		editBtn.TextContent("Edit")
+	}
+
+	return nil
+}
+
+func deleteProvider(this, e *browser.Object) any {
+	providerItem := this.ClosestByClassName("provider-item")
+	if providerItem == nil {
+		return nil
+	}
+
+	providerName := providerItem.GetElementsByClassName("provider-name")[0]
+	providerID := providerName.GetTextContent()
+
+	if !browser.Confirm(fmt.Sprintf("Are you sure you want to delete provider \"%s\"?", providerID)) {
+		return nil
+	}
+
+	providerItem.Remove()
+	return nil
+}
+
+func addProvider(this, e *browser.Object) any {
+	doc := browser.Document()
+	providersList := doc.GetElementByID("providers-list")
+
+	// Create a new empty provider
+	newProvider := wire.ProviderSettings{
+		ProviderID: "new-provider",
+		ModelID:    "new-model",
+		APIKey:     "",
+		Default:    false,
+	}
+
+	// Count existing providers to get next index
+	existingProviders := providersList.GetElementsByClassName("provider-item")
+	index := len(existingProviders)
+
+	providerItem := createProviderElement(newProvider, index)
+	providerItem.SetAttribute("data-new", "true")
+	providersList.Append(providerItem)
+
+	// Automatically expand the edit section for the new provider
+	editSection := providerItem.GetElementsByClassName("provider-edit-section")[0]
+	if editSection != nil {
+		editSection.AddClass("expanded")
+	}
+
+	return nil
+}
+
+func renderAllowedDirs(dirs []string) {
+	doc := browser.Document()
+	dirsList := doc.GetElementByID("allowed-dirs-list")
+	dirsList.RemoveChildren()
+
+	for _, dir := range dirs {
+		dirItem := createDirElement(dir)
+		dirsList.Append(dirItem)
+	}
+}
+
+func createDirElement(dir string) *browser.Object {
+	deleteBtn := browser.Button(
+		nil,
+		browser.Text("Delete"),
+	)
+	deleteBtn.AddClickHandler(deleteDirectory)
+
+	return browser.Div(
+		[]string{"dir-item"},
+		browser.Div(
+			[]string{"dir-name"},
+			browser.Text(dir),
+		),
+		deleteBtn,
+	)
+}
+
+func deleteDirectory(this, e *browser.Object) any {
+	e.PreventDefault()
+	dirItem := this.ClosestByClassName("dir-item")
+	if dirItem == nil {
+		return nil
+	}
+
+	dirName := dirItem.GetElementsByClassName("dir-name")[0]
+	dirPath := dirName.GetTextContent()
+
+	if !browser.Confirm(fmt.Sprintf("Are you sure you want to delete directory \"%s\"?", dirPath)) {
+		return nil
+	}
+
+	dirItem.Remove()
+	return nil
+}
+
+func collectProviders() []wire.ProviderSettings {
+	doc := browser.Document()
+	providersList := doc.GetElementByID("providers-list")
+	providerItems := providersList.GetElementsByClassName("provider-item")
+
+	var providers []wire.ProviderSettings
+
+	for i := 0; i < len(providerItems); i++ {
+		item := providerItems[i]
+		providerName := item.GetElementsByClassName("provider-name")[0]
+		providerModel := item.GetElementsByClassName("provider-model")[0]
+		apiKeyInput := item.GetElementsByClassName("api-key-input")[0]
+		defaultCheckbox := item.GetElementsByClassName("provider-default-checkbox")[0]
+
+		provider := wire.ProviderSettings{
+			ProviderID: providerName.GetTextContent(),
+			ModelID:    providerModel.GetTextContent(),
+			APIKey:     apiKeyInput.GetValue(),
+			Default:    defaultCheckbox.GetChecked(),
+		}
+		providers = append(providers, provider)
+	}
+
+	return providers
+}
+
+func collectAllowedDirs() []string {
+	doc := browser.Document()
+	dirsList := doc.GetElementByID("allowed-dirs-list")
+	dirItems := dirsList.GetElementsByClassName("dir-item")
+
+	var dirs []string
+
+	for i := 0; i < len(dirItems); i++ {
+		item := dirItems[i]
+		dirName := item.GetElementsByClassName("dir-name")[0]
+		dirs = append(dirs, dirName.GetTextContent())
+	}
+
+	return dirs
 }

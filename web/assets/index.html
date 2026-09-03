@@ -84,8 +84,28 @@
   <dialog closedby="any" id="global-settings">
     <h2>Global Settings</h2>
     <form method="dialog">
-      <textarea rows="5" cols="100"></textarea><br />
-      <button>Save config</button>
+      <div class="settings-section">
+        <h3>Default Modification Mode</h3>
+        <label class="checkbox-label">
+          <input type="checkbox" id="default-modifications" />
+          Allow modifications by default
+        </label>
+      </div>
+
+      <div class="settings-section">
+        <h3>Providers</h3>
+        <div id="providers-list" class="providers-list"></div>
+        <button type="button" id="add-provider-btn" class="secondary-btn">Add Provider</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Allowed Directories</h3>
+        <div id="allowed-dirs-list" class="allowed-dirs-list"></div>
+      </div>
+
+      <div class="settings-actions">
+        <button type="button" id="save-global-settings-btn">Save</button>
+      </div>
     </form>
   </dialog>
 

@@ -1,6 +1,7 @@
 package browser
 
 import (
+	"strings"
 	"syscall/js"
 )
 
@@ -148,6 +149,23 @@ func (o *Object) ClosestByClassName(className string) *Object {
 	return result
 }
 
+func (o *Object) ClosestByTagName(tag string) *Object {
+	tag = strings.ToUpper(tag)
+	result := o
+
+	for result.value.Get("tagName").String() != tag {
+		value := result.value.Get("parentElement")
+		if value.IsNull() {
+			return nil
+		}
+		result = &Object{
+			value: value,
+		}
+	}
+
+	return result
+}
+
 func (o *Object) GetAttribute(attr string) string {
 	value := o.value.Call("getAttribute", attr)
 	if value.Type() == js.TypeString {
@@ -161,8 +179,20 @@ func (o *Object) SetAttribute(attr, value string) {
 	o.value.Call("setAttribute", attr, value)
 }
 
+func (o *Object) RemoveAttribute(attr string) {
+	o.value.Call("removeAttribute", attr)
+}
+
 func (o *Object) Disabled(disabled bool) {
 	o.value.Set("disabled", disabled)
+}
+
+func (o *Object) GetChecked() bool {
+	return o.value.Get("checked").Bool()
+}
+
+func (o *Object) SetChecked(checked bool) {
+	o.value.Set("checked", checked)
 }
 
 func (o *Object) RemoveChildren() {
@@ -281,4 +311,16 @@ type Location struct {
 
 func (l *Location) Reload() {
 	l.value.Call("reload")
+}
+
+func (o *Object) Remove() {
+	o.value.Call("remove")
+}
+
+func Prompt(text, defaultValue string) string {
+	result := Global().value.Call("prompt", text, defaultValue)
+	if result.Type() == js.TypeString {
+		return result.String()
+	}
+	return ""
 }
