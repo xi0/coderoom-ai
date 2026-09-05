@@ -728,7 +728,19 @@ dialog .checkbox-label input[type="checkbox"] {
   font-size: 0.9rem;
 }
 
-.provider-edit-section input:focus {
+.provider-edit-section select {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.provider-edit-section input:focus,
+.provider-edit-section select:focus {
   outline: none;
   border-color: var(--accent-color);
 }
