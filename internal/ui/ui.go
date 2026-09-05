@@ -609,6 +609,25 @@ func createProviderElement(provider wire.ProviderSettings, index int) *browser.O
 	)
 	deleteBtn.AddClickHandler(deleteProvider)
 
+	// Create API key input with toggle button
+	apiKeyInput := browser.Input(
+		[]string{"api-key-input"},
+		browser.InputTypePassword,
+		provider.APIKey,
+	)
+
+	togglePasswordBtn := browser.Button(
+		[]string{"toggle-password-btn"},
+		browser.HTML(`<svg class="eye-icon eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`),
+	)
+	togglePasswordBtn.AddClickHandler(togglePasswordVisibility)
+
+	apiKeyWrapper := browser.Div(
+		[]string{"api-key-wrapper"},
+		apiKeyInput,
+		togglePasswordBtn,
+	)
+
 	editSection := browser.Div(
 		[]string{"provider-edit-section"},
 		providerDropdown,
@@ -618,11 +637,7 @@ func createProviderElement(provider wire.ProviderSettings, index int) *browser.O
 				nil,
 				browser.Text("API Key"),
 			),
-			browser.Input(
-				[]string{"api-key-input"},
-				browser.InputTypePassword,
-				provider.APIKey,
-			),
+			apiKeyWrapper,
 		),
 		browser.Label(
 			[]string{"checkbox-label"},
@@ -710,6 +725,33 @@ func toggleProviderEdit(this, e *browser.Object) any {
 		} else {
 			button.TextContent("Edit")
 		}
+	}
+
+	return nil
+}
+
+func togglePasswordVisibility(this, e *browser.Object) any {
+	// Find the api-key-input in the same wrapper
+	apiKeyWrapper := this.ClosestByClassName("api-key-wrapper")
+	if apiKeyWrapper == nil {
+		return nil
+	}
+
+	apiKeyInputs := apiKeyWrapper.GetElementsByClassName("api-key-input")
+	if len(apiKeyInputs) == 0 {
+		return nil
+	}
+
+	apiKeyInput := apiKeyInputs[0]
+	currentType := apiKeyInput.GetAttribute("type")
+
+	// Toggle between password and text
+	if currentType == browser.InputTypePassword {
+		apiKeyInput.SetAttribute("type", browser.InputTypeText)
+		this.AddClass("showing")
+	} else {
+		apiKeyInput.SetAttribute("type", browser.InputTypePassword)
+		this.RemoveClass("showing")
 	}
 
 	return nil

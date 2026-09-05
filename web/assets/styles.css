@@ -728,6 +728,51 @@ dialog .checkbox-label input[type="checkbox"] {
   font-size: 0.9rem;
 }
 
+.api-key-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.api-key-wrapper input {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.toggle-password-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.toggle-password-btn:hover {
+  color: var(--text-primary);
+}
+
+.toggle-password-btn .eye-icon {
+  display: none;
+}
+
+.toggle-password-btn .eye-open {
+  display: block;
+}
+
+.toggle-password-btn.showing .eye-open {
+  display: none;
+}
+
+.toggle-password-btn.showing .eye-closed {
+  display: block;
+}
+
 .provider-edit-section select {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
