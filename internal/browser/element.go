@@ -4,6 +4,11 @@ import (
 	"strings"
 )
 
+type SelectOption struct {
+	Value string
+	Text  string
+}
+
 const (
 	InputTypeText     = "text"
 	InputTypePassword = "password"
@@ -76,6 +81,29 @@ func Label(classes []string, children ...*Object) *Object {
 func Button(classes []string, children ...*Object) *Object {
 	o := element("button", classes, children)
 	o.value.Call("setAttribute", "type", "button")
+	return o
+}
+
+func Select(classes []string, options []SelectOption) *Object {
+	var children []*Object
+	for _, o := range options {
+		children = append(children, Option(o.Value, o.Text, false))
+	}
+
+	o := element("select", classes, children)
+	return o
+}
+
+func Option(value, text string, selected bool) *Object {
+	o := element("option",
+		nil,
+		[]*Object{
+			Text(text),
+		},
+	)
+	o.value.Call("setAttribute", "value", value)
+	o.value.Set("selected", selected)
+
 	return o
 }
 

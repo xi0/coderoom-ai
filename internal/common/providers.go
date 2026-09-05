@@ -1,4 +1,4 @@
-package backend
+package common
 
 type Provider struct {
 	Name       string

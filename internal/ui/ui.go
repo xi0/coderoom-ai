@@ -8,15 +8,18 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/xi0/coderoom-ai/internal/browser"
+	"github.com/xi0/coderoom-ai/internal/common"
 	"github.com/xi0/coderoom-ai/internal/wire"
 )
 
 var (
-	webSocket      *browser.WebSocket
-	onlyWhiteSpace = regexp.MustCompile("^\\s*$")
+	webSocket          *browser.WebSocket
+	onlyWhiteSpace     = regexp.MustCompile("^\\s*$")
+	providerModelMatch = regexp.MustCompile("^([0-9]+)/([0-9]+)$")
 )
 
 func butterbar(message string, isSuccess bool) {
@@ -262,7 +265,11 @@ func saveGlobalSettings(this, e *browser.Object) any {
 	darkTheme := theme == "dark"
 
 	// Collect providers
-	providers := collectProviders()
+	providers, err := collectProviders()
+	if err != nil {
+		butterbar("Global settings NOT saved", false)
+		return nil
+	}
 
 	// Collect allowed directories
 	allowedDirs := collectAllowedDirs()
@@ -494,15 +501,46 @@ func renderProviders(providers []wire.ProviderSettings) {
 }
 
 func createProviderElement(provider wire.ProviderSettings, index int) *browser.Object {
+	var providerInfoProvider, providerInfoModel string
+	var providerOptions []browser.SelectOption
+
+	if provider.ProviderID == "" && provider.ModelID == "" {
+		providerOptions = append(
+			providerOptions,
+			browser.SelectOption{
+				Value: "",
+				Text:  "Please select Provider / Model",
+			},
+		)
+	}
+
+	for i, p := range common.Providers {
+		for j, m := range p.Models {
+			if (provider.ProviderID == "" && provider.ModelID == "") || (provider.ProviderID == p.ProviderID && provider.ModelID == m.ModelID) {
+				providerOptions = append(
+					providerOptions,
+					browser.SelectOption{
+						Value: fmt.Sprintf("%d/%d", i, j),
+						Text:  fmt.Sprintf("%s / %s", p.Name, m.Name),
+					},
+				)
+			}
+			if provider.ProviderID == p.ProviderID && provider.ModelID == m.ModelID {
+				providerInfoProvider = p.Name
+				providerInfoModel = m.Name
+			}
+		}
+	}
+
 	providerInfo := browser.Div(
 		[]string{"provider-info"},
 		browser.Div(
 			[]string{"provider-name"},
-			browser.Text(provider.ProviderID),
+			browser.Text(providerInfoProvider),
 		),
 		browser.Div(
 			[]string{"provider-model"},
-			browser.Text(provider.ModelID),
+			browser.Text(providerInfoModel),
 		),
 	)
 
@@ -530,6 +568,18 @@ func createProviderElement(provider wire.ProviderSettings, index int) *browser.O
 		[]string{"provider-header"},
 		providerInfo,
 		providerActions,
+	)
+
+	providerDropdown := browser.Div(
+		[]string{"form-group"},
+		browser.Label(
+			nil,
+			browser.Text("Provider / Model"),
+		),
+		browser.Select(
+			[]string{"provider-model-dropdown"},
+			providerOptions,
+		),
 	)
 
 	defaultCheckbox := browser.Input(
@@ -561,30 +611,7 @@ func createProviderElement(provider wire.ProviderSettings, index int) *browser.O
 
 	editSection := browser.Div(
 		[]string{"provider-edit-section"},
-		browser.Div(
-			[]string{"form-group"},
-			browser.Label(
-				nil,
-				browser.Text("Provider ID"),
-			),
-			browser.Input(
-				[]string{"provider-id-input"},
-				browser.InputTypeText,
-				provider.ProviderID,
-			),
-		),
-		browser.Div(
-			[]string{"form-group"},
-			browser.Label(
-				nil,
-				browser.Text("Model ID"),
-			),
-			browser.Input(
-				[]string{"model-id-input"},
-				browser.InputTypeText,
-				provider.ModelID,
-			),
-		),
+		providerDropdown,
 		browser.Div(
 			[]string{"form-group"},
 			browser.Label(
@@ -732,19 +759,40 @@ func saveProvider(this, e *browser.Object) any {
 	providerItem.RemoveAttribute("data-new")
 
 	// Get input values
-	providerIDInput := providerItem.GetElementsByClassName("provider-id-input")[0]
-	modelIDInput := providerItem.GetElementsByClassName("model-id-input")[0]
+
+	providerModelDropdown := providerItem.GetElementsByClassName("provider-model-dropdown")[0]
 	defaultCheckbox := providerItem.GetElementsByClassName("provider-default-checkbox")[0]
 
-	providerID := providerIDInput.GetValue()
-	modelID := modelIDInput.GetValue()
+	m := providerModelMatch.FindStringSubmatch(providerModelDropdown.GetValue())
+	if m == nil {
+		browser.Alert("No provider selected!")
+		return nil
+	}
+	providerIndex, err := strconv.Atoi(m[1])
+	if err != nil {
+		fmt.Printf("Int could not be parsed: %q\n", m[1])
+		return nil
+	}
+	provider := common.Providers[providerIndex]
+
+	modelIndex, err := strconv.Atoi(m[2])
+	if err != nil {
+		fmt.Printf("Int could not be parsed: %q\n", m[2])
+		return nil
+	}
+	model := provider.Models[modelIndex]
+
+	/*
+		providerID := providerIDInput.GetValue()
+		modelID := modelIDInput.GetValue()
+	*/
 	isDefault := defaultCheckbox.GetChecked()
 
 	// Update provider info display
 	providerName := providerItem.GetElementsByClassName("provider-name")[0]
 	providerModel := providerItem.GetElementsByClassName("provider-model")[0]
-	providerName.TextContent(providerID)
-	providerModel.TextContent(modelID)
+	providerName.TextContent(provider.Name)
+	providerModel.TextContent(model.Name)
 
 	// Remove existing default badge
 	existingBadges := providerItem.GetElementsByClassName("provider-default-badge")
@@ -816,8 +864,8 @@ func addProvider(this, e *browser.Object) any {
 
 	// Create a new empty provider
 	newProvider := wire.ProviderSettings{
-		ProviderID: "new-provider",
-		ModelID:    "new-model",
+		ProviderID: "",
+		ModelID:    "",
 		APIKey:     "",
 		Default:    false,
 	}
@@ -885,7 +933,7 @@ func deleteDirectory(this, e *browser.Object) any {
 	return nil
 }
 
-func collectProviders() []wire.ProviderSettings {
+func collectProviders() ([]wire.ProviderSettings, error) {
 	doc := browser.Document()
 	providersList := doc.GetElementByID("providers-list")
 	providerItems := providersList.GetElementsByClassName("provider-item")
@@ -894,21 +942,41 @@ func collectProviders() []wire.ProviderSettings {
 
 	for i := 0; i < len(providerItems); i++ {
 		item := providerItems[i]
-		providerName := item.GetElementsByClassName("provider-name")[0]
-		providerModel := item.GetElementsByClassName("provider-model")[0]
+
+		providerModelDropdown := item.GetElementsByClassName("provider-model-dropdown")[0]
+		m := providerModelMatch.FindStringSubmatch(providerModelDropdown.GetValue())
+		if m == nil {
+			browser.Alert("No provider selected!")
+			return nil, fmt.Errorf("no provider selected (%d)", i)
+		}
+
+		providerIndex, err := strconv.Atoi(m[1])
+		if err != nil {
+			fmt.Printf("Int could not be parsed: %q\n", m[1])
+			return nil, fmt.Errorf("int could not be parsed: %q", m[1])
+		}
+		provider := common.Providers[providerIndex]
+
+		modelIndex, err := strconv.Atoi(m[2])
+		if err != nil {
+			fmt.Printf("Int could not be parsed: %q\n", m[2])
+			return nil, fmt.Errorf("int could not be parsed: %q", m[2])
+		}
+		model := provider.Models[modelIndex]
+
 		apiKeyInput := item.GetElementsByClassName("api-key-input")[0]
 		defaultCheckbox := item.GetElementsByClassName("provider-default-checkbox")[0]
 
-		provider := wire.ProviderSettings{
-			ProviderID: providerName.GetTextContent(),
-			ModelID:    providerModel.GetTextContent(),
+		wireProvider := wire.ProviderSettings{
+			ProviderID: provider.ProviderID,
+			ModelID:    model.ModelID,
 			APIKey:     apiKeyInput.GetValue(),
 			Default:    defaultCheckbox.GetChecked(),
 		}
-		providers = append(providers, provider)
+		providers = append(providers, wireProvider)
 	}
 
-	return providers
+	return providers, nil
 }
 
 func collectAllowedDirs() []string {
