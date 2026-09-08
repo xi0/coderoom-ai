@@ -28,8 +28,9 @@ func DocumentElement() *Object {
 }
 
 const (
-	EventClick = "click"
-	EventInput = "input"
+	EventChange = "change"
+	EventClick  = "click"
+	EventInput  = "input"
 )
 
 func Alert(text string) {
@@ -46,6 +47,10 @@ func (o *Object) AddEventHandler(event string, h func(*Object, *Object) any) {
 			return h(&Object{value: this}, &Object{value: args[0]})
 		},
 	))
+}
+
+func (o *Object) AddChangeHandler(h func(*Object, *Object) any) {
+	o.AddEventHandler(EventChange, h)
 }
 
 func (o *Object) AddClickHandler(h func(*Object, *Object) any) {

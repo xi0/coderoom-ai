@@ -868,6 +868,10 @@ dialog .checkbox-label input[type="checkbox"] {
   font-size: 0.95rem;
 }
 
+.settings-section .form-group.hidden {
+  display: none;
+}
+
 /* Optional: Dim the background when opened with .showModal() */
 dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.6);

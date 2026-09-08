@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/xi0/coderoom-ai/internal/browser"
@@ -83,6 +84,15 @@ func init() {
 
 	addProviderBtn := doc.GetElementByID("add-provider-btn")
 	addProviderBtn.AddClickHandler(addProvider)
+
+	saveProjectSettingsButton := doc.GetElementByID("save-project-settings-btn")
+	saveProjectSettingsButton.AddClickHandler(saveProjectSettings)
+
+	buildProjectBlockPolicy := doc.GetElementByID("build-project-block-policy")
+	buildProjectBlockPolicy.AddChangeHandler(changeBlockPolicy)
+
+	runTestsBlockPolicy := doc.GetElementByID("run-tests-block-policy")
+	runTestsBlockPolicy.AddChangeHandler(changeBlockPolicy)
 
 	go initDone()
 }
@@ -311,7 +321,159 @@ func saveGlobalSettings(this, e *browser.Object) any {
 }
 
 func projectSettings(this, e *browser.Object) any {
-	fmt.Println("projectSettings")
+	doc := browser.Document()
+	dialog := doc.GetElementByID("project-settings")
+	dialog.ShowModal()
+
+	go loadProjectSettings()
+
+	return nil
+}
+
+func loadProjectSettings() {
+	doc := browser.Document()
+
+	location := browser.Document().Location()
+	url := fmt.Sprintf("%s//%s/settings/project", location.Protocol, location.Host)
+
+	resp, err := http.DefaultClient.Get(url)
+	if err != nil {
+		fmt.Printf("Get(): %v\n", err)
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Get from URL %q failed with status %q\n", url, resp.Status)
+		return
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("io.ReadAll(): %v", err)
+		return
+	}
+
+	var settings wire.ProjectSettings
+	if err := json.Unmarshal(data, &settings); err != nil {
+		fmt.Printf("JSON unmarshal error: %v\n", err)
+		return
+	}
+
+	projectName := doc.GetElementByID("project-name-input")
+	projectName.SetValue(settings.Name)
+
+	renderTool("build-project", settings.BuildProjectTool)
+	renderTool("run-tests", settings.RunTestsTool)
+}
+
+func renderTool(prefix string, settings *wire.ToolSettings) {
+	doc := browser.Document()
+	input := doc.GetElementByID(fmt.Sprintf("%s-input", prefix))
+	blockPolicy := doc.GetElementByID(fmt.Sprintf("%s-block-policy", prefix))
+	blockFilelist := doc.GetElementByID(fmt.Sprintf("%s-block-filelist", prefix))
+	formGroup := blockFilelist.ClosestByClassName("form-group")
+
+	if settings != nil {
+		input.SetValue(settings.Command)
+		if len(settings.BlockingFiles) == 1 && settings.BlockingFiles[0] == "*" {
+			blockPolicy.SetValue("any")
+			formGroup.AddClass("hidden")
+		} else {
+			blockPolicy.SetValue("list")
+			formGroup.RemoveClass("hidden")
+			blockFilelist.SetValue(strings.Join(settings.BlockingFiles, "\n"))
+		}
+	} else {
+		input.SetValue("")
+		blockPolicy.SetValue("any")
+	}
+}
+
+func saveProjectSettings(this, e *browser.Object) any {
+	doc := browser.Document()
+	dialog := doc.GetElementByID("project-settings")
+
+	projectName := doc.GetElementByID("project-name-input")
+
+	settings := wire.ProjectSettings{
+		Name: projectName.GetValue(),
+	}
+
+	settings.BuildProjectTool = collectTool("build-project")
+	settings.RunTestsTool = collectTool("run-tests")
+
+	jsonData, err := json.Marshal(settings)
+	if err != nil {
+		fmt.Printf("JSON marshal error: %v\n", err)
+		butterbar("Project settings NOT saved", false)
+		return nil
+	}
+
+	location := browser.Document().Location()
+	url := fmt.Sprintf("%s//%s/settings/project", location.Protocol, location.Host)
+
+	go func() {
+		resp, err := http.DefaultClient.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			fmt.Printf("Post(): %v\n", err)
+			butterbar("Project settings NOT saved", false)
+			return
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			butterbar("Project settings saved", true)
+			dialog.Close()
+
+			name := doc.GetElementByID("project-name")
+			name.TextContent(projectName.GetValue())
+		} else {
+			butterbar("Project settings NOT saved", false)
+		}
+	}()
+
+	return nil
+}
+
+func collectTool(prefix string) *wire.ToolSettings {
+	doc := browser.Document()
+	input := doc.GetElementByID(fmt.Sprintf("%s-input", prefix))
+	blockPolicy := doc.GetElementByID(fmt.Sprintf("%s-block-policy", prefix))
+	blockFilelist := doc.GetElementByID(fmt.Sprintf("%s-block-filelist", prefix))
+
+	if onlyWhiteSpace.MatchString(input.GetValue()) {
+		return nil
+	}
+
+	settings := &wire.ToolSettings{
+		Command: input.GetValue(),
+	}
+
+	if blockPolicy.GetValue() == "any" {
+		settings.BlockingFiles = []string{"*"}
+	} else {
+		files := strings.Split(blockFilelist.GetValue(), "\n")
+
+		for _, f := range files {
+			if !onlyWhiteSpace.MatchString(f) {
+				settings.BlockingFiles = append(settings.BlockingFiles, strings.TrimSpace(f))
+			}
+		}
+	}
+
+	return settings
+}
+
+func changeBlockPolicy(this, e *browser.Object) any {
+	doc := browser.Document()
+	id := this.GetAttribute("id")
+
+	formGroup := doc.GetElementByID(strings.TrimSuffix(id, "-policy") + "-filelist").ClosestByClassName("form-group")
+	if this.GetValue() == "list" {
+		formGroup.RemoveClass("hidden")
+	} else {
+		formGroup.AddClass("hidden")
+	}
+
 	return nil
 }
 

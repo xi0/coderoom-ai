@@ -50,8 +50,8 @@ You can use the following keywords to test different message types in the UI.
 		Init: &wire.InitMessage{
 			Modifications: be.Settings.GetDefaultModifications(),
 			DarkTheme:     be.Settings.GetDarkTheme(),
-			ProjectName:   "Coderoom AI",
-			ProjectDir:    "/home/xi/projects/coderoom-ai",
+			ProjectName:   be.Settings.GetProjectName(),
+			ProjectDir:    be.Settings.ProjectDir,
 		},
 		SystemMessage: &systemMessage,
 		WorkDone:      true,

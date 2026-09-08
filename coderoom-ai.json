@@ -1,0 +1,17 @@
+{
+  "version": 0,
+  "name": "Coderoom AI",
+  "build_project_tool": {
+    "command": "make",
+    "blocking_files": [
+      "/Makefile",
+      "/copy_wasm_exec.go"
+    ]
+  },
+  "run_tests_tool": {
+    "command": "go test -v",
+    "blocking_files": [
+      "*_test.go"
+    ]
+  }
+}

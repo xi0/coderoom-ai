@@ -31,6 +31,10 @@ func NewSettings(settingsDir, projectDir string) (*Settings, error) {
 		return nil, err
 	}
 
+	if err := s.loadProject(); err != nil {
+		return nil, err
+	}
+
 	return s, nil
 }
 
@@ -197,5 +201,99 @@ func (s *Settings) SetDarkTheme(darkTheme bool) {
 	s.global.DarkTheme = darkTheme
 }
 
+func (s *Settings) GetProjectName() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.project == nil {
+		return "-"
+	}
+
+	return s.project.Name
+}
+
 func (s *Settings) serveProject(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.mu.Lock()
+		data, err := json.Marshal(s.project)
+		defer s.mu.Unlock()
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			log.Printf("json.Marshal(): %v", err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	case http.MethodPost:
+		if r.Header.Get("Content-Type") != "application/json" {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		data, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		s.mu.Lock()
+		err = json.Unmarshal(data, s.project)
+		s.mu.Unlock()
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			log.Printf("json.Unmarshal(): %v", err)
+			return
+		}
+
+		s.saveProject()
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{\"ok\": true}"))
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Settings) loadProject() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	fileName := filepath.Join(s.ProjectDir, "coderoom-ai.json")
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			s.project = &wire.ProjectSettings{
+				Name: filepath.Base(s.ProjectDir),
+			}
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	s.project = &wire.ProjectSettings{}
+	if err := json.Unmarshal(data, s.project); err != nil {
+		return fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	return nil
+}
+
+func (s *Settings) saveProject() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data, err := json.MarshalIndent(s.project, "", "  ")
+	if err != nil {
+		return fmt.Errorf("json.MarshalIndent(): %v", err)
+	}
+
+	fileName := filepath.Join(s.ProjectDir, "coderoom-ai.json")
+	if err := os.WriteFile(fileName, data, 0644); err != nil {
+		return err
+	}
+
+	return nil
 }

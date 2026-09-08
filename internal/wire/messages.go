@@ -68,11 +68,11 @@ type ProviderSettings struct {
 type ProjectSettings struct {
 	Version          int           `json:"version"`
 	Name             string        `json:"name"`
-	buildProjectTool *ToolSettings `json:"build_project_tool"`
-	runTestsTool     *ToolSettings `json:"run_tests_tool"`
+	BuildProjectTool *ToolSettings `json:"build_project_tool"`
+	RunTestsTool     *ToolSettings `json:"run_tests_tool"`
 }
 
 type ToolSettings struct {
-	command       string   `json:"command"`
-	blockingFiles []string `json:"blocking_files"`
+	Command       string   `json:"command"`
+	BlockingFiles []string `json:"blocking_files"`
 }
