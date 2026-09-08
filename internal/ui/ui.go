@@ -94,6 +94,11 @@ func init() {
 	runTestsBlockPolicy := doc.GetElementByID("run-tests-block-policy")
 	runTestsBlockPolicy.AddChangeHandler(changeBlockPolicy)
 
+	// Add handler for connection lost dialog
+
+	lostConnectionButton := doc.GetElementByID("connection-lost").GetElementsByTagName("button")[0]
+	lostConnectionButton.AddClickHandler(resetSessionNoConfirmation)
+
 	go initDone()
 }
 
@@ -138,6 +143,12 @@ func resetSession(this, e *browser.Object) any {
 	if browser.Confirm("Are you sure that you want to reset the session?") {
 		browser.Document().Location().Reload()
 	}
+
+	return nil
+}
+
+func resetSessionNoConfirmation(this, e *browser.Object) any {
+	browser.Document().Location().Reload()
 
 	return nil
 }
@@ -566,12 +577,17 @@ func handleClose(wasError bool) {
 	wrapper := doc.GetElementsByClassName("input-wrapper")[0]
 	wrapper.RemoveClass("focus")
 
+	dialog := doc.GetElementByID("connection-lost")
+	p := dialog.GetElementsByTagName("p")[0]
+
 	text := "Connection lost"
 	if wasError {
 		text += " due to error"
 	}
 
-	browser.Alert(text)
+	p.TextContent(text)
+
+	dialog.ShowModal()
 }
 
 func handleInit(message *wire.InitMessage) {

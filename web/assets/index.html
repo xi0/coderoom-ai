@@ -168,6 +168,16 @@
     </form>
   </dialog>
 
+  <dialog closedby="none" id="connection-lost">
+    <h2>Connection lost</h2>
+    <p>Message here</p>
+    <form method="dialog">
+      <div class="settings-actions">
+        <button type="button">Reset session</button>
+      </div>
+    </form>
+  </dialog>
+
   <script>
     const go = new Go();
     WebAssembly.instantiateStreaming(fetch("/main.wasm"), go.importObject)
