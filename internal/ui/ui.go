@@ -246,6 +246,14 @@ func loadGlobalSettings() {
 		return
 	}
 
+	// Set auto-open
+	autoOpen := doc.GetElementByID("auto-open-select")
+	if settings.AutoOpen != nil {
+		autoOpen.SetValue(*settings.AutoOpen)
+	} else {
+		autoOpen.SetValue("")
+	}
+
 	// Set default modifications checkbox
 	defaultModCheckbox := doc.GetElementByID("default-modifications")
 	if settings.DefaultModifications {
@@ -264,6 +272,13 @@ func loadGlobalSettings() {
 func saveGlobalSettings(this, e *browser.Object) any {
 	doc := browser.Document()
 	dialog := doc.GetElementByID("global-settings")
+
+	// Get auto-open
+	autoOpenValue := doc.GetElementByID("auto-open-select").GetValue()
+	var autoOpen *string
+	if autoOpenValue != "" {
+		autoOpen = &autoOpenValue
+	}
 
 	// Get default modifications setting
 	defaultModCheckbox := doc.GetElementByID("default-modifications")
@@ -285,6 +300,7 @@ func saveGlobalSettings(this, e *browser.Object) any {
 	allowedDirs := collectAllowedDirs()
 
 	settings := wire.GlobalSettings{
+		AutoOpen:             autoOpen,
 		DefaultModifications: defaultModifications,
 		DarkTheme:            darkTheme,
 		Providers:            providers,

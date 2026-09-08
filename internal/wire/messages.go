@@ -52,6 +52,7 @@ type PingMessage struct {
 
 type GlobalSettings struct {
 	Version              int                `json:"version"`
+	AutoOpen             *string            `json:"auto_open,omitempty"`
 	DefaultModifications bool               `json:"default_modifications"`
 	DarkTheme            bool               `json:"dark_theme"`
 	AllowedDirs          []string           `json:"allowed_dirs"`

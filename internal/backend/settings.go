@@ -168,6 +168,17 @@ func (s *Settings) saveGlobal() error {
 	return nil
 }
 
+func (s *Settings) GetAutoOpen() *string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return nil
+	}
+
+	return s.global.AutoOpen
+}
+
 func (s *Settings) GetDefaultModifications() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()

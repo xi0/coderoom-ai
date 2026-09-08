@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/xi0/coderoom-ai/internal/backend"
 	"github.com/xi0/coderoom-ai/web"
@@ -45,6 +47,17 @@ var (
 		},
 	}
 )
+
+func autoOpen(command, url string) {
+	time.Sleep(250 * time.Millisecond)
+
+	cmd := exec.Command(command, url)
+	output, err := cmd.CombinedOutput()
+	fmt.Printf("\n\n%s\n", output)
+	if err != nil {
+		log.Printf("exec: %v\n", err)
+	}
+}
 
 func serveHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
@@ -91,7 +104,13 @@ func main() {
 	http.HandleFunc("/chat", backend.ServeHTTP)
 	http.Handle("/settings/", settings)
 
-	fmt.Printf("\nStarting a web server on http://localhost:%d/\n", *port)
+	url := fmt.Sprintf("http://localhost:%d/", *port)
+	fmt.Printf("\nStarting a web server on %s\n", url)
+
+	autoOpenValue := settings.GetAutoOpen()
+	if autoOpenValue != nil {
+		go autoOpen(*autoOpenValue, url)
+	}
 
 	http.ListenAndServe(fmt.Sprintf("localhost:%d", *port), nil)
 }

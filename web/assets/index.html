@@ -85,6 +85,15 @@
     <h2>Global Settings</h2>
     <form method="dialog">
       <div class="settings-section">
+        <h3>Automatically open on launch</h3>
+	<select id="auto-open-select">
+	  <option value="">Do not open automatically</option>
+	  <option value="chrome">Open with Chrome / Chromium</option>
+	  <option value="firefox">Open with Firefox</option>
+	  <option value="xdg-open">Open with xdg-open</option>
+	</select>
+      </div>
+      <div class="settings-section">
         <h3>Default Modification Mode</h3>
         <label class="checkbox-label">
           <input type="checkbox" id="default-modifications" />
