@@ -634,6 +634,68 @@ dialog .checkbox-label input[type="checkbox"] {
   cursor: pointer;
 }
 
+/* Dialog Form Groups */
+dialog .settings-section .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+dialog .settings-section label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+dialog .settings-section input[type="text"],
+dialog .settings-section input[type="password"] {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+dialog .settings-section input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+dialog .settings-section select {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+dialog .settings-section select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+dialog .settings-section textarea {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  width: 100%;
+}
+
+dialog .settings-section textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
 /* Providers List */
 .providers-list {
   display: flex;
