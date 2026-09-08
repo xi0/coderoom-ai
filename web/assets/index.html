@@ -10,6 +10,9 @@
 </head>
 <body>
   <div class="app-container">
+    <!-- Butterbar Notification -->
+    <div id="butterbar" class="butterbar hidden"></div>
+
     <!-- Top Bar -->
     <header class="top-bar">
       <!-- Line 1 -->
@@ -78,27 +81,92 @@
     </footer>
   </div>
 
-  <script>
-    // Progress Bar Control for Working Message
-    // To adjust progress, simply update the width style of the element with id 'working-progress'
-    // Example: document.getElementById('working-progress').style.width = '67%';
+  <dialog closedby="any" id="global-settings">
+    <h2>Global Settings</h2>
+    <form method="dialog">
+      <div class="settings-section">
+        <h3>Automatically open on launch</h3>
+	<select id="auto-open-select">
+	  <option value="">Do not open automatically</option>
+	  <option value="chrome">Open with Chrome / Chromium</option>
+	  <option value="firefox">Open with Firefox</option>
+	  <option value="xdg-open">Open with xdg-open</option>
+	</select>
+      </div>
+      <div class="settings-section">
+        <h3>Default Modification Mode</h3>
+        <label class="checkbox-label">
+          <input type="checkbox" id="default-modifications" />
+          Allow modifications by default
+        </label>
+      </div>
 
-    /*
-    // Options Selection Functionality
-    const optionButtons = document.querySelectorAll('.option-btn');
-    optionButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        // Remove selected class from all buttons
-        optionButtons.forEach(btn => btn.classList.remove('selected'));
-        // Add selected class to clicked button
-        button.classList.add('selected');
-        // Log the selected option (can be customized for actual use)
-        const selectedOption = button.getAttribute('data-option');
-        console.log('User selected option:', selectedOption);
-      });
-    });
-  */
-  </script>
+      <div class="settings-section">
+        <h3>Providers</h3>
+        <div id="providers-list" class="providers-list"></div>
+        <button type="button" id="add-provider-btn" class="secondary-btn">Add Provider</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Allowed Directories</h3>
+        <div id="allowed-dirs-list" class="allowed-dirs-list"></div>
+      </div>
+
+      <div class="settings-actions">
+        <button type="button" id="save-global-settings-btn">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog closedby="any" id="project-settings">
+    <h2>Project Settings</h2>
+    <form method="dialog">
+      <div class="settings-section">
+        <h3>Project</h3>
+	<div class="form-group">
+	  <label>Name</label>
+	  <input type="text" id="project-name-input" />
+	</div>
+      </div>
+      <div class="settings-section">
+        <h3>Tools</h3>
+	<div class="form-group">
+	  <label>Build project</label>
+	  <input type="text" id="build-project-input" />
+	</div>
+	<div class="form-group">
+	  <label>Blocking build project</label>
+	  <select id="build-project-block-policy">
+	    <option value="any">Block on any file modification</option>
+	    <option value="list">Block on modifed files from a list</option>
+	  </select>
+	</div>
+	<div class="form-group hidden">
+	  <label>Blocking build project file list</label>
+	  <textarea id="build-project-block-filelist" rows="5" cols="50"></textarea>
+	</div>
+	<div class="form-group">
+	  <label>Run tests</label>
+	  <input type="text" id="run-tests-input" />
+	</div>
+	<div class="form-group">
+	  <label>Blocking run tests</label>
+	  <select id="run-tests-block-policy">
+	    <option value="any">Block on any file modification</option>
+	    <option value="list">Block on modifed files from a list</option>
+	  </select>
+	</div>
+	<div class="form-group hidden">
+	  <label>Blocking run tests file list</label>
+	  <textarea id="run-tests-block-filelist" rows="5" cols="50"></textarea>
+	</div>
+      </div>
+
+      <div class="settings-actions">
+        <button type="button" id="save-project-settings-btn">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <script>
     const go = new Go();

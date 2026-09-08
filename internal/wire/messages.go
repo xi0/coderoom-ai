@@ -26,6 +26,7 @@ type BackendMessage struct {
 
 type InitMessage struct {
 	Modifications bool   `json:"modifications"`
+	DarkTheme     bool   `json:"dark_theme"`
 	ProjectName   string `json:"project_name"`
 	ProjectDir    string `json:"project_dir"`
 }
@@ -45,4 +46,34 @@ type ProgressMessage struct {
 type PingMessage struct {
 	Seq int64  `json:"seq"`
 	TS  string `json:"ts"`
+}
+
+// Settings messages
+
+type GlobalSettings struct {
+	Version              int                `json:"version"`
+	AutoOpen             *string            `json:"auto_open,omitempty"`
+	DefaultModifications bool               `json:"default_modifications"`
+	DarkTheme            bool               `json:"dark_theme"`
+	AllowedDirs          []string           `json:"allowed_dirs"`
+	Providers            []ProviderSettings `json:"providers"`
+}
+
+type ProviderSettings struct {
+	ProviderID string `json:"provider_id"`
+	ModelID    string `json:"model_id"`
+	APIKey     string `json:"api_key"`
+	Default    bool   `json:"default"`
+}
+
+type ProjectSettings struct {
+	Version          int           `json:"version"`
+	Name             string        `json:"name"`
+	BuildProjectTool *ToolSettings `json:"build_project_tool"`
+	RunTestsTool     *ToolSettings `json:"run_tests_tool"`
+}
+
+type ToolSettings struct {
+	Command       string   `json:"command"`
+	BlockingFiles []string `json:"blocking_files"`
 }

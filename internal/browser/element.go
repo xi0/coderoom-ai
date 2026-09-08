@@ -4,6 +4,17 @@ import (
 	"strings"
 )
 
+type SelectOption struct {
+	Value string
+	Text  string
+}
+
+const (
+	InputTypeText     = "text"
+	InputTypePassword = "password"
+	InputTypeCheckbox = "checkbox"
+)
+
 func element(elementType string, classes []string, children []*Object) *Object {
 	e := Document().value.Call("createElement", elementType)
 
@@ -56,9 +67,43 @@ func LI(children ...*Object) *Object {
 	return element("li", nil, children)
 }
 
+func Input(classes []string, inputType, value string) *Object {
+	o := element("input", classes, nil)
+	o.value.Call("setAttribute", "type", inputType)
+	o.value.Call("setAttribute", "value", value)
+	return o
+}
+
+func Label(classes []string, children ...*Object) *Object {
+	return element("label", nil, children)
+}
+
 func Button(classes []string, children ...*Object) *Object {
 	o := element("button", classes, children)
 	o.value.Call("setAttribute", "type", "button")
+	return o
+}
+
+func Select(classes []string, options []SelectOption) *Object {
+	var children []*Object
+	for _, o := range options {
+		children = append(children, Option(o.Value, o.Text, false))
+	}
+
+	o := element("select", classes, children)
+	return o
+}
+
+func Option(value, text string, selected bool) *Object {
+	o := element("option",
+		nil,
+		[]*Object{
+			Text(text),
+		},
+	)
+	o.value.Call("setAttribute", "value", value)
+	o.value.Set("selected", selected)
+
 	return o
 }
 
