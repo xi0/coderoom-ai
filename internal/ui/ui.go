@@ -107,6 +107,7 @@ func initDone() {
 		browser.MessageHandlers{
 			Close:           handleClose,
 			Init:            handleInit,
+			AllowDirMessage: handleAllowDirMessage,
 			SystemMessage:   handleSystemMessage,
 			ToolMessage:     handleToolMessage,
 			ProposalMessage: handleProposalMessage,
@@ -620,6 +621,16 @@ func handleInit(message *wire.InitMessage) {
 
 	dir := doc.GetElementByID("project-dir")
 	dir.TextContent(message.ProjectDir)
+}
+
+func handleAllowDirMessage(dir string) {
+	addMessage(allowDirMessage(dir, sendAllowDir))
+}
+
+func sendAllowDir(allow bool) {
+	webSocket.Send(wire.FrontendMessage{
+		AllowDir: &allow,
+	})
 }
 
 func handleSystemMessage(markdown string) {

@@ -5,6 +5,7 @@ package wire
 type FrontendMessage struct {
 	Modifications bool         `json:"modifications"`
 	Ping          *PingMessage `json:"ping,omitempty"`
+	AllowDir      *bool        `json:"allow_dir,omitempty"`
 	Prompt        *string      `json:"prompt,omitempty"`
 	ChosenOption  *int         `json:"chosen_option,omitempty"`
 	Confirmation  *bool        `json:"confirmation,omitempty"`
@@ -15,6 +16,7 @@ type FrontendMessage struct {
 type BackendMessage struct {
 	Init            *InitMessage     `json:"init,omitempty"`
 	Pong            *PingMessage     `json:"pong,omitempty"`
+	AllowDirMessage *string          `json:"allow_dir,omitempty"`
 	SystemMessage   *string          `json:"system_message,omitempty"`
 	ToolMessage     *string          `json:"tool_message,omitempty"`
 	ProposalMessage *string          `json:"proposal_message,omitempty"`

@@ -97,7 +97,7 @@ func main() {
 	if *testMode {
 		backend.SetBackend(&backend.TestBackend{Settings: settings})
 	} else {
-		backend.SetBackend(&backend.OpenAI{})
+		backend.SetBackend(&backend.OpenAI{Settings: settings})
 	}
 
 	http.HandleFunc("/", serveHTTP)

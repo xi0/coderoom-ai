@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/xi0/coderoom-ai/internal/wire"
@@ -221,6 +222,45 @@ func (s *Settings) GetProjectName() string {
 	}
 
 	return s.project.Name
+}
+
+func (s *Settings) DirAllowed() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return false
+	}
+
+	return slices.Contains(s.global.AllowedDirs, s.ProjectDir)
+}
+
+func (s *Settings) AllowDir() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return
+	}
+
+	s.global.AllowedDirs = append(s.global.AllowedDirs, s.ProjectDir)
+}
+
+func (s *Settings) GetDefaultProvider() *wire.ProviderSettings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return nil
+	}
+
+	for _, p := range s.global.Providers {
+		if p.Default {
+			return &p
+		}
+	}
+
+	return nil
 }
 
 func (s *Settings) serveProject(w http.ResponseWriter, r *http.Request) {
