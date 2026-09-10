@@ -19,6 +19,7 @@ func BuildToolsList() *ToolsList {
 			listDirTool(),
 			readFileTool(),
 			writeFileTool(),
+			editFileTool(),
 		},
 	}
 }
