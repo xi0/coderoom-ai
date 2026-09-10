@@ -20,6 +20,7 @@ func BuildToolsList() *ToolsList {
 			readFileTool(),
 			writeFileTool(),
 			editFileTool(),
+			deleteFileTool(),
 		},
 	}
 }
