@@ -18,6 +18,7 @@ func BuildToolsList() *ToolsList {
 		list: []*Tool{
 			listDirTool(),
 			readFileTool(),
+			grepTool(),
 			writeFileTool(),
 			editFileTool(),
 			deleteFileTool(),
