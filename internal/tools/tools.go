@@ -17,6 +17,7 @@ func BuildToolsList() *ToolsList {
 	return &ToolsList{
 		list: []*Tool{
 			listDirTool(),
+			readFileTool(),
 		},
 	}
 }
