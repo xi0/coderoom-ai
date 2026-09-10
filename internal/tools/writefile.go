@@ -17,7 +17,7 @@ type WriteFileArgs struct {
 
 func writeFileTool() *Tool {
 	return &Tool{
-		mutating: false,
+		mutating: true,
 		definition: &openai.Tool{
 			Type: openai.ToolTypeFunction,
 			Function: &openai.FunctionDefinition{
