@@ -40,6 +40,10 @@ func listDirTool() *Tool {
 				return "", fmt.Errorf("invalid arguments for list_dir: %w", err)
 			}
 
+			if args.RelativePath == "" {
+				args.RelativePath = "."
+			}
+
 			toolString := fmt.Sprintf("list_dir(%q)", args.RelativePath)
 			options.writeChannel <- wire.BackendMessage{
 				ToolMessage: &toolString,

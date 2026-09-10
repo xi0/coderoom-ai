@@ -6,3 +6,6 @@ web/dist/main.wasm: web/wasm/main.go internal/browser/object.go internal/browser
 
 web/dist/wasm_exec.js:
 	go run copy_wasm_exec.go
+
+test:
+	go test -v internal/tools/*.go

@@ -51,7 +51,7 @@ type Tool struct {
 
 type ToolOptions struct {
 	modifications bool
-	root          os.Root
+	root          *os.Root
 	writeChannel  chan wire.BackendMessage
 }
 
