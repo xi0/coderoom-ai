@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/xi0/coderoom-ai/internal/common"
+	"github.com/xi0/coderoom-ai/internal/tools"
+	"github.com/xi0/coderoom-ai/internal/wire"
 
 	"github.com/sashabaranov/go-openai"
-	"github.com/xi0/coderoom-ai/internal/wire"
 )
 
 type OpenAI struct {
@@ -150,6 +150,7 @@ func (be *OpenAI) client() *openai.Client {
 
 func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan string, optionChannel chan int, confirmationChannel chan bool) {
 	ctx := context.Background()
+	toolsList := tools.BuildToolsList()
 
 	messages := []openai.ChatCompletionMessage{
 		{
@@ -159,7 +160,8 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 	}
 
 	for prompt := range promptChannel {
-		time.Sleep(1 * time.Second)
+		// TODO: Get modifications bool along with the prompt
+		modifications := true
 
 		systemMessage := fmt.Sprintf("Got prompt:\n\n%s", prompt)
 
@@ -179,7 +181,7 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 		req := openai.ChatCompletionRequest{
 			Model:    "code",
 			Messages: messages,
-			//			Tools:    list_tools(),
+			Tools:    toolsList.Get(modifications),
 		}
 
 		client := be.client()
