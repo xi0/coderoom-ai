@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -64,6 +62,10 @@ func grepTool() *Tool {
 				return "", fmt.Errorf("pattern cannot be empty")
 			}
 
+			if args.RelativePath == "" {
+				args.RelativePath = "."
+			}
+
 			// Compile the regexp
 			var re *regexp.Regexp
 			var err error
@@ -86,8 +88,11 @@ func grepTool() *Tool {
 				if d.IsDir() {
 					// Skip hidden directories and common non-source directories
 					name := d.Name()
+					if name == "." {
+						return nil
+					}
 					if strings.HasPrefix(name, ".") || name == "node_modules" || name == "vendor" || name == ".git" || name == "CVS" {
-						return filepath.SkipDir
+						return fs.SkipDir
 					}
 					return nil
 				}
@@ -99,7 +104,7 @@ func grepTool() *Tool {
 				}
 
 				// Read file content
-				content, err := os.ReadFile(path)
+				content, err := options.root.ReadFile(path)
 				if err != nil {
 					// Skip files that can't be read
 					return nil
