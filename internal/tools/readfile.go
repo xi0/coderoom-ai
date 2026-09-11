@@ -49,6 +49,10 @@ func readFileTool() *Tool {
 				return "", fmt.Errorf("failed to read file: %w", err)
 			}
 
+			if len(content) == 0 {
+				return "", fmt.Errorf("file is empty")
+			}
+
 			return string(content), nil
 		},
 	}

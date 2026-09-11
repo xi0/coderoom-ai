@@ -255,16 +255,12 @@ func TestReadFileEmptyFile(t *testing.T) {
 
 	tool := readFileTool()
 	argsJSON := `{"relative_path": "empty.txt"}`
-	result, err := tool.call(argsJSON, options)
+	_, err = tool.call(argsJSON, options)
 
-	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+	if err == nil {
+		t.Error("Expected error for empty file, got nil")
 	}
 
-	// Empty file should return empty string
-	if result != "" {
-		t.Errorf("Expected empty result for empty file, got: %q", result)
-	}
 }
 
 func TestReadFileWithSpecialCharacters(t *testing.T) {
