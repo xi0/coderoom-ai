@@ -22,6 +22,7 @@ func BuildToolsList() *ToolsList {
 			writeFileTool(),
 			editFileTool(),
 			deleteFileTool(),
+			proposePlanTool(),
 		},
 	}
 }
@@ -55,9 +56,10 @@ type Tool struct {
 }
 
 type ToolOptions struct {
-	modifications bool
-	root          *os.Root
-	writeChannel  chan wire.BackendMessage
+	modifications       bool
+	root                *os.Root
+	writeChannel        chan wire.BackendMessage
+	confirmationChannel chan bool
 }
 
 func (t *Tool) call(argsJSON string, options *ToolOptions) (string, error) {
