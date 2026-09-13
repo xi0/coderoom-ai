@@ -23,6 +23,7 @@ func BuildToolsList() *ToolsList {
 			editFileTool(),
 			deleteFileTool(),
 			proposePlanTool(),
+			presentOptionsTool(),
 		},
 	}
 }
@@ -59,6 +60,7 @@ type ToolOptions struct {
 	modifications       bool
 	root                *os.Root
 	writeChannel        chan wire.BackendMessage
+	optionChannel       chan int
 	confirmationChannel chan bool
 }
 
