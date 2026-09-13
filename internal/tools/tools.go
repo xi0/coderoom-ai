@@ -24,6 +24,7 @@ func BuildToolsList() *ToolsList {
 			deleteFileTool(),
 			proposePlanTool(),
 			presentOptionsTool(),
+			reportProgressTool(),
 		},
 	}
 }
