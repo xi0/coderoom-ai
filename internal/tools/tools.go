@@ -43,7 +43,7 @@ func (tl *ToolsList) Get(modifications bool) []openai.Tool {
 
 func (tl *ToolsList) Call(name string, argsJSON string, options *ToolOptions) (string, error) {
 	for _, t := range tl.list {
-		if name == t.definition.Function.Name && (options.modifications || !t.mutating) {
+		if name == t.definition.Function.Name && (options.Modifications || !t.mutating) {
 			return t.call(argsJSON, options)
 		}
 	}
@@ -58,11 +58,11 @@ type Tool struct {
 }
 
 type ToolOptions struct {
-	modifications       bool
-	root                *os.Root
-	writeChannel        chan wire.BackendMessage
-	optionChannel       chan int
-	confirmationChannel chan bool
+	Modifications       bool
+	Root                *os.Root
+	WriteChannel        chan wire.BackendMessage
+	OptionChannel       chan int
+	ConfirmationChannel chan bool
 }
 
 func (t *Tool) call(argsJSON string, options *ToolOptions) (string, error) {

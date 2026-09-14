@@ -40,9 +40,9 @@ func TestDeleteFileValidFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	// Test deleting the test file
@@ -98,9 +98,9 @@ func TestDeleteFileNonExistentFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := deleteFileTool()
@@ -137,9 +137,9 @@ func TestDeleteFileInvalidJSON(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := deleteFileTool()
@@ -174,9 +174,9 @@ func TestDeleteFileMissingRequiredField(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := deleteFileTool()
@@ -226,9 +226,9 @@ func TestDeleteFileSubdirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := deleteFileTool()
@@ -283,9 +283,9 @@ func TestDeleteFileEmptyPath(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := deleteFileTool()
@@ -325,9 +325,9 @@ func TestDeleteFileMultipleFiles(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := deleteFileTool()
@@ -390,9 +390,9 @@ func TestDeleteFileWithSpecialCharactersInName(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := deleteFileTool()

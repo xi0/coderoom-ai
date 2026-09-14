@@ -44,9 +44,9 @@ func TestListDirValidDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	// Test listing the root of our temp directory
@@ -111,9 +111,9 @@ func TestListDirNonExistentDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := listDirTool()
@@ -152,9 +152,9 @@ func TestListDirRootDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := listDirTool()
@@ -206,9 +206,9 @@ func TestListDirInvalidJSON(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := listDirTool()
@@ -243,9 +243,9 @@ func TestListDirMissingRequiredField(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := listDirTool()
@@ -287,9 +287,9 @@ func TestListDirEmptyDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := listDirTool()
@@ -341,9 +341,9 @@ func TestListDirMultipleFiles(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := listDirTool()

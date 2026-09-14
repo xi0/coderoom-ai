@@ -16,7 +16,7 @@ func reportProgressTestOptions() (*ToolOptions, chan wire.BackendMessage) {
 	writeChannel := make(chan wire.BackendMessage, 1)
 
 	options := &ToolOptions{
-		writeChannel: writeChannel,
+		WriteChannel: writeChannel,
 	}
 
 	return options, writeChannel

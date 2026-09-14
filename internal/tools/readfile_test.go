@@ -35,9 +35,9 @@ func TestReadFileValidFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	// Test reading the test file
@@ -87,9 +87,9 @@ func TestReadFileNonExistentFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -129,9 +129,9 @@ func TestReadFileRootDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -171,9 +171,9 @@ func TestReadFileInvalidJSON(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -208,9 +208,9 @@ func TestReadFileMissingRequiredField(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -248,9 +248,9 @@ func TestReadFileEmptyFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -287,9 +287,9 @@ func TestReadFileWithSpecialCharacters(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -336,9 +336,9 @@ func TestReadFileSubdirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -401,9 +401,9 @@ func TestReadFileLargeContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()
@@ -444,9 +444,9 @@ func TestReadFileBinaryContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := readFileTool()

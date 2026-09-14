@@ -46,16 +46,16 @@ func writeFileTool() *Tool {
 			}
 
 			toolString := fmt.Sprintf("write_file(%q)", args.RelativePath)
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &toolString,
 			}
 
 			// Ensure target directory exists before writing
-			if err := options.root.MkdirAll(filepath.Dir(args.RelativePath), 0755); err != nil {
+			if err := options.Root.MkdirAll(filepath.Dir(args.RelativePath), 0755); err != nil {
 				return "", fmt.Errorf("failed to create parent directory: %w", err)
 			}
 
-			err := options.root.WriteFile(args.RelativePath, []byte(args.Content), 0644)
+			err := options.Root.WriteFile(args.RelativePath, []byte(args.Content), 0644)
 			if err != nil {
 				return "", fmt.Errorf("failed to write file: %w", err)
 			}

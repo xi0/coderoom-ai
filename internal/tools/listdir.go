@@ -45,11 +45,11 @@ func listDirTool() *Tool {
 			}
 
 			toolString := fmt.Sprintf("list_dir(%q)", args.RelativePath)
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &toolString,
 			}
 
-			dir, err := options.root.Open(args.RelativePath)
+			dir, err := options.Root.Open(args.RelativePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to open directory: %w", err)
 			}

@@ -40,11 +40,11 @@ func deleteFileTool() *Tool {
 			}
 
 			toolString := fmt.Sprintf("delete_file(%q)", args.RelativePath)
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &toolString,
 			}
 
-			err := options.root.Remove(args.RelativePath)
+			err := options.Root.Remove(args.RelativePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to delete file %q: %w", args.RelativePath, err)
 			}

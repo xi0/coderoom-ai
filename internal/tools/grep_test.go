@@ -41,9 +41,9 @@ func TestGrepValidPatternWithMatches(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	// Test grep with pattern that should match
@@ -108,9 +108,9 @@ func TestGrepNoMatchesFound(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -151,9 +151,9 @@ func TestGrepCaseInsensitive(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -195,9 +195,9 @@ func TestGrepCaseSensitive(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -236,9 +236,9 @@ func TestGrepInvalidRegex(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -272,9 +272,9 @@ func TestGrepEmptyPattern(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -307,9 +307,9 @@ func TestGrepInvalidJSON(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -363,9 +363,9 @@ func TestGrepInSubdirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -421,9 +421,9 @@ func TestGrepSkipHiddenFiles(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -489,9 +489,9 @@ func TestGrepSkipHiddenDirectories(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -547,9 +547,9 @@ func TestGrepSkipBinaryFiles(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -634,9 +634,9 @@ func TestGrepSkipCommonDirectories(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -693,9 +693,9 @@ func TestGrepRegexPattern(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -745,9 +745,9 @@ func TestGrepMultipleMatchesInSameFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -794,9 +794,9 @@ func TestGrepEmptyDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -837,9 +837,9 @@ func TestGrepWithRelativePathDot(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -884,9 +884,9 @@ func TestGrepWithEmptyRelativePath(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()
@@ -947,9 +947,9 @@ func TestGrepSkipCVSDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := grepTool()

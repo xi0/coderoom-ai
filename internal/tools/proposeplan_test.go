@@ -18,9 +18,9 @@ func proposePlanTestOptions() (*ToolOptions, chan wire.BackendMessage, chan bool
 	confirmationChannel := make(chan bool, 1)
 
 	options := &ToolOptions{
-		modifications:       false,
-		writeChannel:        writeChannel,
-		confirmationChannel: confirmationChannel,
+		Modifications:       false,
+		WriteChannel:        writeChannel,
+		ConfirmationChannel: confirmationChannel,
 	}
 
 	return options, writeChannel, confirmationChannel
@@ -181,8 +181,8 @@ func TestProposePlanSendsProposalBeforeConfirmation(t *testing.T) {
 	confirmationChannel := make(chan bool)
 
 	options := &ToolOptions{
-		writeChannel:        writeChannel,
-		confirmationChannel: confirmationChannel,
+		WriteChannel:        writeChannel,
+		ConfirmationChannel: confirmationChannel,
 	}
 
 	type callResult struct {

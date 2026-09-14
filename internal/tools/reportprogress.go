@@ -56,7 +56,7 @@ func reportProgressTool() *Tool {
 				percent = 100
 			}
 
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				UpdateProgress: &wire.ProgressMessage{
 					Percent: percent,
 					Text:    args.Description,

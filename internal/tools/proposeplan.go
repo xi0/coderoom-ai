@@ -39,11 +39,11 @@ func proposePlanTool() *Tool {
 				return "", fmt.Errorf("invalid arguments for read_file: %w", err)
 			}
 
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				ProposalMessage: &args.Plan,
 			}
 
-			confirmed := <-options.confirmationChannel
+			confirmed := <-options.ConfirmationChannel
 
 			// Return boolean as string indicating user's decision
 			return fmt.Sprintf("%t", confirmed), nil

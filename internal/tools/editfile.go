@@ -51,11 +51,11 @@ func editFileTool() *Tool {
 			}
 
 			toolString := fmt.Sprintf("edit_file(%q)", args.RelativePath)
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &toolString,
 			}
 
-			content, err := options.root.ReadFile(args.RelativePath)
+			content, err := options.Root.ReadFile(args.RelativePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to read file %q: %w", args.RelativePath, err)
 			}
@@ -66,7 +66,7 @@ func editFileTool() *Tool {
 
 			content = bytes.Replace(content, []byte(args.OldString), []byte(args.NewString), 1)
 
-			err = options.root.WriteFile(args.RelativePath, []byte(content), 0644)
+			err = options.Root.WriteFile(args.RelativePath, []byte(content), 0644)
 			if err != nil {
 				return "", fmt.Errorf("failed to write file: %w", err)
 			}

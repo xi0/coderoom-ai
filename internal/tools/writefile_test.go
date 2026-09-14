@@ -29,9 +29,9 @@ func TestWriteFileCreateNewFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	// Test creating a new file
@@ -100,9 +100,9 @@ func TestWriteFileOverwriteExistingFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -149,9 +149,9 @@ func TestWriteFileCreateInSubdirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -204,9 +204,9 @@ func TestWriteFileInvalidJSON(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -241,9 +241,9 @@ func TestWriteFileMissingRequiredFields(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -295,9 +295,9 @@ func TestWriteFileEmptyContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -343,9 +343,9 @@ func TestWriteFileWithSpecialCharacters(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -392,9 +392,9 @@ func TestWriteFileLargeContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -455,9 +455,9 @@ func TestWriteFileWithBackslashes(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -499,9 +499,9 @@ func TestWriteFileWithJSONContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -544,9 +544,9 @@ func TestWriteFileDeeplyNestedDirectories(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -594,9 +594,9 @@ func TestWriteFileWithMultilineContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()
@@ -638,9 +638,9 @@ func TestWriteFileRootDirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := writeFileTool()

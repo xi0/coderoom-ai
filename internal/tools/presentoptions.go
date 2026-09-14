@@ -49,14 +49,14 @@ func presentOptionsTool() *Tool {
 				return "", fmt.Errorf("options list cannot be empty")
 			}
 
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				OptionsMessage: &wire.OptionsMessage{
 					Description: args.Prompt,
 					Options:     args.Options,
 				},
 			}
 
-			selection := <-options.optionChannel
+			selection := <-options.OptionChannel
 
 			if selection < 0 || selection >= len(args.Options) {
 				return "", fmt.Errorf("User selected option %d is out of range. Should be 0-%d.", selection, len(args.Options)-1)

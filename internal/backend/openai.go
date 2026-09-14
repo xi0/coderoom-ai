@@ -2,8 +2,11 @@ package backend
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"github.com/xi0/coderoom-ai/internal/common"
 	"github.com/xi0/coderoom-ai/internal/tools"
@@ -14,6 +17,11 @@ import (
 
 type OpenAI struct {
 	Settings *Settings
+}
+
+type promptData struct {
+	modifications bool
+	prompt        string
 }
 
 const (
@@ -72,7 +80,7 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 		}
 	}
 
-	promptChannel := make(chan string)
+	promptChannel := make(chan promptData)
 	optionChannel := make(chan int)
 	confirmationChannel := make(chan bool)
 	go be.agentLoop(writeChannel, promptChannel, optionChannel, confirmationChannel)
@@ -104,7 +112,10 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 			}
 		case StateChat:
 			if message.Prompt != nil {
-				promptChannel <- *message.Prompt
+				promptChannel <- promptData{
+					modifications: message.Modifications,
+					prompt:        *message.Prompt,
+				}
 			}
 			if message.ChosenOption != nil {
 				optionChannel <- *message.ChosenOption
@@ -148,9 +159,15 @@ func (be *OpenAI) client() *openai.Client {
 	return openai.NewClientWithConfig(config)
 }
 
-func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan string, optionChannel chan int, confirmationChannel chan bool) {
+func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan promptData, optionChannel chan int, confirmationChannel chan bool) {
 	ctx := context.Background()
 	toolsList := tools.BuildToolsList()
+
+	root, err := os.OpenRoot(be.Settings.ProjectDir)
+	if err != nil {
+		log.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
 
 	messages := []openai.ChatCompletionMessage{
 		{
@@ -160,70 +177,80 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 	}
 
 	for prompt := range promptChannel {
-		// TODO: Get modifications bool along with the prompt
-		modifications := true
+		for {
+			messages = append(messages,
+				openai.ChatCompletionMessage{
+					Role:    openai.ChatMessageRoleUser,
+					Content: prompt.prompt,
+				},
+			)
 
-		systemMessage := fmt.Sprintf("Got prompt:\n\n%s", prompt)
+			req := openai.ChatCompletionRequest{
+				Model:    "code",
+				Messages: messages,
+				Tools:    toolsList.Get(prompt.modifications),
+			}
 
-		writeChannel <- wire.BackendMessage{
-			SystemMessage: &systemMessage,
-			WorkDone:      true,
-			EnablePrompt:  true,
+			log.Printf("Tools: %d", len(req.Tools))
+
+			client := be.client()
+			resp, err := client.CreateChatCompletion(ctx, req)
+			if err != nil {
+				log.Fatalf("API call failed: %v", err)
+			}
+
+			msg := resp.Choices[0].Message
+			messages = append(messages, msg)
+
+			// If no tool calls were made, the model has finished its response
+			if len(msg.ToolCalls) == 0 {
+				writeChannel <- wire.BackendMessage{
+					SystemMessage: &msg.Content,
+					WorkDone:      true,
+					EnablePrompt:  true,
+				}
+				break
+			} else {
+				// Handle tool execution requests from the model
+				toolOptions := &tools.ToolOptions{
+					Modifications:       prompt.modifications,
+					Root:                root,
+					WriteChannel:        writeChannel,
+					OptionChannel:       optionChannel,
+					ConfirmationChannel: confirmationChannel,
+				}
+
+				for _, toolCall := range msg.ToolCalls {
+					output, err := toolsList.Call(toolCall.Function.Name, toolCall.Function.Arguments, toolOptions)
+					if err != nil {
+						output = fmt.Sprintf("Error executing tool: %v", err)
+					}
+
+					// Append tool execution result back to conversation history
+					messages = append(messages, openai.ChatCompletionMessage{
+						Role:       openai.ChatMessageRoleTool,
+						Content:    output,
+						ToolCallID: toolCall.ID,
+					})
+
+				}
+			}
 		}
+		dump_messages(&messages)
+	}
+}
 
-		messages = append(messages,
-			openai.ChatCompletionMessage{
-				Role:    openai.ChatMessageRoleUser,
-				Content: prompt,
-			},
-		)
-
-		req := openai.ChatCompletionRequest{
-			Model:    "code",
-			Messages: messages,
-			Tools:    toolsList.Get(modifications),
-		}
-
-		client := be.client()
-		resp, err := client.CreateChatCompletion(ctx, req)
+func dump_messages(messages *[]openai.ChatCompletionMessage) {
+	messagesJSON, err := json.MarshalIndent(messages, "", "  ")
+	if err != nil {
+		log.Printf("Failed to marshal messages: %v", err)
+	} else {
+		filename := fmt.Sprintf("/tmp/messages-%d.json", time.Now().Unix())
+		err := os.WriteFile(filename, messagesJSON, 0644)
 		if err != nil {
-			log.Fatalf("API call failed: %v", err)
+			log.Printf("Failed to write messages file: %v", err)
+		} else {
+			log.Printf("Messages dumped to %s", filename)
 		}
-
-		msg := resp.Choices[0].Message
-		messages = append(messages, msg)
-
-		// If no tool calls were made, the model has finished its response
-		if len(msg.ToolCalls) == 0 {
-			writeChannel <- wire.BackendMessage{
-				SystemMessage: &msg.Content,
-				WorkDone:      true,
-				EnablePrompt:  true,
-			}
-			break
-		}
-
-		// Handle tool execution requests from the model
-		/*
-			for _, toolCall := range msg.ToolCalls {
-				truncatedArguments := toolCall.Function.Arguments
-				if len(truncatedArguments) > 30 {
-					truncatedArguments = truncatedArguments[0:30] + "..."
-				}
-				fmt.Printf("[Tool Call] Running %s with args: %s\n", toolCall.Function.Name, truncatedArguments)
-
-				output, err := run_tool(toolCall.Function.Name, toolCall.Function.Arguments, targetDir, nil, nil)
-				if err != nil {
-					output = fmt.Sprintf("Error executing tool: %v", err)
-				}
-
-				// Append tool execution result back to conversation history
-				messages = append(messages, openai.ChatCompletionMessage{
-					Role:       openai.ChatMessageRoleTool,
-					Content:    output,
-					ToolCallID: toolCall.ID,
-				})
-			}
-		*/
 	}
 }

@@ -19,9 +19,9 @@ func presentOptionsTestOptions() (*ToolOptions, chan wire.BackendMessage, chan i
 	optionChannel := make(chan int, 1)
 
 	options := &ToolOptions{
-		modifications: false,
-		writeChannel:  writeChannel,
-		optionChannel: optionChannel,
+		Modifications: false,
+		WriteChannel:  writeChannel,
+		OptionChannel: optionChannel,
 	}
 
 	return options, writeChannel, optionChannel
@@ -253,8 +253,8 @@ func TestPresentOptionsSendsMessageBeforeSelection(t *testing.T) {
 	optionChannel := make(chan int)
 
 	options := &ToolOptions{
-		writeChannel:  writeChannel,
-		optionChannel: optionChannel,
+		WriteChannel:  writeChannel,
+		OptionChannel: optionChannel,
 	}
 
 	type callResult struct {

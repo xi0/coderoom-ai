@@ -36,9 +36,9 @@ func TestEditFileSuccessfulEdit(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	// Test editing the test file
@@ -106,9 +106,9 @@ func TestEditFileOldStringNotFound(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -151,9 +151,9 @@ func TestEditFileNonExistentFile(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -186,9 +186,9 @@ func TestEditFileInvalidJSON(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -223,9 +223,9 @@ func TestEditFileMissingRequiredFields(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -264,9 +264,9 @@ func TestEditFileEmptyStrings(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -323,9 +323,9 @@ func TestEditFileMultipleOccurrences(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -372,9 +372,9 @@ func TestEditFileSpecialCharacters(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -427,9 +427,9 @@ func TestEditFileSubdirectory(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -497,9 +497,9 @@ func TestEditFileBinaryContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -556,9 +556,9 @@ func TestEditFileLargeContent(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -606,9 +606,9 @@ func TestEditFileNewlineHandling(t *testing.T) {
 	defer close(writeChannel)
 
 	options := &ToolOptions{
-		modifications: true,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: true,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()
@@ -655,9 +655,9 @@ func TestEditFileWithoutModificationsPermission(t *testing.T) {
 
 	// Set modifications to false
 	options := &ToolOptions{
-		modifications: false,
-		root:          root,
-		writeChannel:  writeChannel,
+		Modifications: false,
+		Root:          root,
+		WriteChannel:  writeChannel,
 	}
 
 	tool := editFileTool()

@@ -54,7 +54,7 @@ func grepTool() *Tool {
 			}
 
 			toolString := fmt.Sprintf("grep(%q)", args.Pattern)
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &toolString,
 			}
 
@@ -79,7 +79,7 @@ func grepTool() *Tool {
 			}
 
 			var results []string
-			err = fs.WalkDir(options.root.FS(), args.RelativePath, func(path string, d fs.DirEntry, err error) error {
+			err = fs.WalkDir(options.Root.FS(), args.RelativePath, func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
@@ -104,7 +104,7 @@ func grepTool() *Tool {
 				}
 
 				// Read file content
-				content, err := options.root.ReadFile(path)
+				content, err := options.Root.ReadFile(path)
 				if err != nil {
 					// Skip files that can't be read
 					return nil

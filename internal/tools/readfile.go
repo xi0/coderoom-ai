@@ -40,11 +40,11 @@ func readFileTool() *Tool {
 			}
 
 			toolString := fmt.Sprintf("read_file(%q)", args.RelativePath)
-			options.writeChannel <- wire.BackendMessage{
+			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &toolString,
 			}
 
-			content, err := options.root.ReadFile(args.RelativePath)
+			content, err := options.Root.ReadFile(args.RelativePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to read file: %w", err)
 			}
