@@ -917,6 +917,84 @@ dialog .settings-section textarea:focus {
   background-color: #dc2626;
 }
 
+/* Blocking Files List */
+.blocking-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.blocking-files-list:empty {
+  display: none;
+}
+
+.blocking-file-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.blocking-file-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blocking-file-pattern {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: monospace;
+}
+
+.blocking-file-pattern:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.blocking-file-header button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.blocking-file-header .delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.blocking-file-header .delete-btn:hover {
+  background-color: #dc2626;
+}
+
+.blocking-file-results {
+  font-size: 0.85rem;
+  font-family: monospace;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.blocking-file-results.hidden {
+  display: none;
+}
+
 /* Settings Actions */
 .settings-actions {
   display: flex;

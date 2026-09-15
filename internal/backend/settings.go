@@ -47,6 +47,8 @@ func (s *Settings) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.serveTheme(w, r)
 	case "/settings/project":
 		s.serveProject(w, r)
+	case "/settings/project/blocking-files":
+		s.serveBlockingFiles(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -347,4 +349,37 @@ func (s *Settings) saveProject() error {
 	}
 
 	return nil
+}
+
+func (s *Settings) serveBlockingFiles(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	var request wire.BlockingFilesRequest
+	if err := json.Unmarshal(data, &request); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	var response wire.BlockingFilesResponse
+
+	files, err := s.matchingFiles(request.Pattern)
+	if err != nil {
+		response.Error = err.Error()
+	} else {
+		response.Files = files
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("json.NewEncoder().Encode(): %v", err)
+	}
 }

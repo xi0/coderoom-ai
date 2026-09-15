@@ -139,11 +139,13 @@
 	  <select id="build-project-block-policy">
 	    <option value="any">Block on any file modification</option>
 	    <option value="list">Block on modifed files from a list</option>
+	    <option value="none">Don't block on file modifications</option>
 	  </select>
 	</div>
 	<div class="form-group hidden">
-	  <label>Blocking build project file list</label>
-	  <textarea id="build-project-block-filelist" rows="5" cols="50"></textarea>
+	  <label>Blocking build project file patterns</label>
+	  <div id="build-project-block-filelist" class="blocking-files-list"></div>
+	  <button type="button" id="build-project-add-blocking-btn" class="secondary-btn">Add pattern</button>
 	</div>
 	<div class="form-group">
 	  <label>Run tests</label>
@@ -154,11 +156,13 @@
 	  <select id="run-tests-block-policy">
 	    <option value="any">Block on any file modification</option>
 	    <option value="list">Block on modifed files from a list</option>
+	    <option value="none">Don't block on file modifications</option>
 	  </select>
 	</div>
 	<div class="form-group hidden">
-	  <label>Blocking run tests file list</label>
-	  <textarea id="run-tests-block-filelist" rows="5" cols="50"></textarea>
+	  <label>Blocking run tests file patterns</label>
+	  <div id="run-tests-block-filelist" class="blocking-files-list"></div>
+	  <button type="button" id="run-tests-add-blocking-btn" class="secondary-btn">Add pattern</button>
 	</div>
       </div>
 

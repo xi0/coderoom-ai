@@ -8,4 +8,5 @@ web/dist/wasm_exec.js:
 	go run copy_wasm_exec.go
 
 test:
+	go test -v internal/backend/*.go
 	go test -v internal/tools/*.go

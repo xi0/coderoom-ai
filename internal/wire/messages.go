@@ -79,3 +79,14 @@ type ToolSettings struct {
 	Command       string   `json:"command"`
 	BlockingFiles []string `json:"blocking_files"`
 }
+
+// Requests the list of project files matching a blocking file pattern.
+
+type BlockingFilesRequest struct {
+	Pattern string `json:"pattern"`
+}
+
+type BlockingFilesResponse struct {
+	Files []string `json:"files"`
+	Error string   `json:"error,omitempty"`
+}
