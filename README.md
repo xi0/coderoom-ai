@@ -87,9 +87,114 @@ coderoom-ai/
 
 3. **Begin coding** with AI assistance through the web interface
 
+## Configuration
+
+Coderoom AI supports several configuration options via command-line flags and settings files:
+
+### Command-Line Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-dir` | Project directory to work on | Current working directory |
+| `-port` | TCP port for the web server | `8037` |
+| `-testmode` | Run backend in test mode (no API calls) | `false` |
+
+### Example Usage
+
+```bash
+# Run with custom project directory and port
+coderoom-ai -dir /path/to/project -port 9000
+
+# Run in test mode (useful for development)
+coderoom-ai -testmode
+```
+
+### Settings Directory
+
+Settings are stored in `~/.config/coderoom-ai/`. The application will create this directory automatically on first run.
+
+### Project Configuration (`coderoom-ai.json`)
+
+You can configure tool behavior in your project's `coderoom-ai.json` file:
+
+```json
+{
+  "version": 0,
+  "name": "Coderoom AI",
+  "build_project_tool": {
+    "command": "make",
+    "blocking_files": [
+      "/Makefile",
+      "/copy_wasm_exec.go"
+    ]
+  },
+  "run_tests_tool": {
+    "command": "make test",
+    "blocking_files": [
+      "*_test.go"
+    ]
+  }
+}
+```
+
+- **`blocking_files`**: Tools will only run if the specified files have not been modified by the agent, preventing unsafe operations on changed files.
+
+## Security
+
+Coderoom AI is designed with security as a primary concern:
+
+### File System Restrictions
+- All file operations are restricted to the project directory using Go's `os.Root` type
+- The agent cannot access files outside the specified project directory
+
+### Source Control Protection
+- Direct modification of source control files (e.g., `.git/`, `.svn/`) is prevented
+- This protects your version history from accidental AI modifications
+
+### Confirmation Fatigue Prevention
+- The AI avoids asking excessive confirmation questions for complex commands
+- Instead, it uses safe defaults and blocking file mechanisms
+
+### Tool Execution Safeguards
+- Tools like `build_project` and `run_tests` only execute if their blocking files haven't been modified by the agent
+- This prevents the AI from building/testing its own potentially malicious changes
+
+### Rollback Mechanisms
+- Easy rollback capabilities are built into the workflow
+- All file changes are tracked and can be reverted
+
+## Testing
+
+### Running Tests
+
+Run the test suite using Make:
+
+```bash
+make test
+```
+
+Or run tests directly with Go:
+
+```bash
+go test -v ./internal/tools/...
+```
+
+### Test Coverage
+
+The project includes unit tests for all tool implementations:
+- File operations (read, write, edit, delete)
+- Directory listing
+- Grep functionality
+- Plan proposal and option presentation
+- Progress reporting
+
+### Adding Tests
+
+When contributing new features, please include corresponding tests. Follow the existing test patterns in the `internal/tools/` directory.
+
 ## Style Guidelines
 
-In general, this project follows standard Go conventions and best practices. Try to follow the exisiting style as much as possible.
+In general, this project follows standard Go conventions and best practices. Try to follow the existing style as much as possible.
 
 ## Contributing
 
