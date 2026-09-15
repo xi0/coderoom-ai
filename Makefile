@@ -1,7 +1,7 @@
-bin/coderoom-ai: cmd/coderoom-ai/main.go web/web.go web/assets/index.html web/assets/logo.png web/assets/styles.css web/dist/main.wasm web/dist/wasm_exec.js internal/backend/websocket.go internal/backend/testbackend.go internal/backend/openai.go internal/backend/settings.go internal/common/providers.go internal/wire/messages.go internal/tools/tools.go internal/tools/listdir.go internal/tools/readfile.go internal/tools/grep.go internal/tools/writefile.go internal/tools/editfile.go internal/tools/deletefile.go internal/tools/proposeplan.go internal/tools/presentoptions.go internal/tools/reportprogress.go
+bin/coderoom-ai: cmd/coderoom-ai/main.go web/web.go web/assets/index.html web/assets/logo.png web/assets/styles.css web/dist/main.wasm web/dist/wasm_exec.js internal/backend/*.go internal/common/*.go internal/wire/*.go internal/tools/*.go
 	go build -o bin/coderoom-ai cmd/coderoom-ai/main.go
 
-web/dist/main.wasm: web/wasm/main.go internal/browser/object.go internal/browser/element.go internal/browser/websocket.go internal/ui/ui.go internal/ui/message.go internal/common/providers.go internal/wire/messages.go
+web/dist/main.wasm: web/wasm/main.go internal/browser/*.go internal/ui/*.go internal/common/*.go internal/wire/*.go
 	GOOS=js GOARCH=wasm go build -o web/dist/main.wasm web/wasm/main.go
 
 web/dist/wasm_exec.js:
