@@ -137,7 +137,7 @@ func (be *OpenAI) sendGreeting(writeChannel chan wire.BackendMessage) {
 	}
 }
 
-func (be *OpenAI) client() *openai.Client {
+func (be *OpenAI) client() (*openai.Client, *wire.ProviderSettings) {
 	provider := be.Settings.GetDefaultProvider()
 	baseURL := ""
 	for _, p := range common.Providers {
@@ -151,12 +151,12 @@ func (be *OpenAI) client() *openai.Client {
 	}
 
 	if baseURL == "" {
-		return nil
+		return nil, nil
 	}
 
 	config := openai.DefaultConfig(provider.APIKey)
 	config.BaseURL = baseURL
-	return openai.NewClientWithConfig(config)
+	return openai.NewClientWithConfig(config), provider
 }
 
 func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan promptData, optionChannel chan int, confirmationChannel chan bool) {
@@ -185,15 +185,14 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 				},
 			)
 
+			client, provider := be.client()
+
 			req := openai.ChatCompletionRequest{
-				Model:    "code",
+				Model:    provider.ModelID,
 				Messages: messages,
 				Tools:    toolsList.Get(prompt.modifications),
 			}
 
-			log.Printf("Tools: %d", len(req.Tools))
-
-			client := be.client()
 			resp, err := client.CreateChatCompletion(ctx, req)
 			if err != nil {
 				log.Fatalf("API call failed: %v", err)
