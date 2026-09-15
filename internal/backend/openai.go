@@ -161,7 +161,7 @@ func (be *OpenAI) client() (*openai.Client, *wire.ProviderSettings) {
 
 func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan promptData, optionChannel chan int, confirmationChannel chan bool) {
 	ctx := context.Background()
-	toolsList := tools.BuildToolsList()
+	toolsList := tools.BuildToolsList(be.Settings.GetBuildProjectTool(), be.Settings.GetRunTestsTool())
 
 	root, err := os.OpenRoot(be.Settings.ProjectDir)
 	if err != nil {

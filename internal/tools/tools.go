@@ -13,19 +13,37 @@ type ToolsList struct {
 	list []*Tool
 }
 
-func BuildToolsList() *ToolsList {
+func BuildToolsList(buildProject, runTests *wire.ToolSettings) *ToolsList {
+	list := []*Tool{
+		listDirTool(),
+		readFileTool(),
+		grepTool(),
+		writeFileTool(),
+		editFileTool(),
+		deleteFileTool(),
+		proposePlanTool(),
+		presentOptionsTool(),
+		reportProgressTool(),
+	}
+
+	if buildProject != nil {
+		list = append(list, commandTool(
+			"build_project",
+			"Builds the project.",
+			buildProject,
+		))
+	}
+
+	if runTests != nil {
+		list = append(list, commandTool(
+			"run_tests",
+			"Runs all the tests for the project.",
+			runTests,
+		))
+	}
+
 	return &ToolsList{
-		list: []*Tool{
-			listDirTool(),
-			readFileTool(),
-			grepTool(),
-			writeFileTool(),
-			editFileTool(),
-			deleteFileTool(),
-			proposePlanTool(),
-			presentOptionsTool(),
-			reportProgressTool(),
-		},
+		list: list,
 	}
 }
 

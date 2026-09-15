@@ -265,6 +265,40 @@ func (s *Settings) GetDefaultProvider() *wire.ProviderSettings {
 	return nil
 }
 
+func (s *Settings) GetBuildProjectTool() *wire.ToolSettings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.project == nil {
+		return nil
+	}
+
+	if s.project.BuildProjectTool == nil {
+		return nil
+	}
+
+	// Make a copy of the tool object that can be used when the mutex is not held.
+	tool := *s.project.BuildProjectTool
+	return &tool
+}
+
+func (s *Settings) GetRunTestsTool() *wire.ToolSettings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.project == nil {
+		return nil
+	}
+
+	if s.project.RunTestsTool == nil {
+		return nil
+	}
+
+	// Make a copy of the tool object that can be used when the mutex is not held.
+	tool := *s.project.RunTestsTool
+	return &tool
+}
+
 func (s *Settings) serveProject(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
