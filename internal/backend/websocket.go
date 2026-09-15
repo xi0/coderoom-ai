@@ -66,6 +66,7 @@ func wsReader(ws *websocket.Conn, channel chan wire.FrontendMessage) {
 }
 
 func wsWriter(ws *websocket.Conn, channel chan wire.BackendMessage) {
+	defer ws.Close()
 	done := false
 
 	for message := range channel {

@@ -14,6 +14,7 @@ import (
 type MessageHandlers struct {
 	Close           func(bool)
 	Init            func(*wire.InitMessage)
+	AllowDirMessage func(string)
 	SystemMessage   func(string)
 	ToolMessage     func(string)
 	ProposalMessage func(string)
@@ -82,6 +83,9 @@ func (ws *WebSocket) onMessage(data string) {
 
 	if message.Init != nil {
 		ws.handlers.Init(message.Init)
+	}
+	if message.AllowDirMessage != nil {
+		ws.handlers.AllowDirMessage(*message.AllowDirMessage)
 	}
 	if message.SystemMessage != nil {
 		ws.handlers.SystemMessage(*message.SystemMessage)

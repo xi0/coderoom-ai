@@ -9,7 +9,7 @@
     ]
   },
   "run_tests_tool": {
-    "command": "go test -v",
+    "command": "make test",
     "blocking_files": [
       "*_test.go"
     ]

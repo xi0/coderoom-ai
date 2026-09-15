@@ -39,6 +39,80 @@ func addMessage(m *b.Object) {
 	workingMessage.ScrollIntoView()
 }
 
+func allowDirMessage(dir string, confirm func(bool)) *b.Object {
+	denyButton := b.Button(
+		[]string{"plan-btn", "allow-btn-deny"},
+		b.Text("Deny"),
+	)
+
+	denyButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		allowDirMessageDone(this, false)
+		go confirm(false)
+		return nil
+	})
+
+	allowButton := b.Button(
+		[]string{"plan-btn", "allow-btn-allow"},
+		b.Text("Allow"),
+	)
+
+	allowButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		allowDirMessageDone(this, true)
+		go confirm(true)
+		return nil
+	})
+
+	return b.Div(
+		[]string{"message", "system-message", "allow-dir-message"},
+		b.Div(
+			[]string{"message-content"},
+			b.P(
+				b.Text(fmt.Sprintf("Do you want to allow CoderoomAI to work in the directory %q?", dir)),
+			),
+			b.P(
+				b.Text("Coderoom AI might read and modify files under this directory and execute the configured tools."),
+			),
+			b.P(
+				b.Text("Although the tool does have revert functionality, it is stronhly encouraged to use a version control system (e.g. git) for checkpointing the code."),
+			),
+			b.P(
+				b.Em(
+					b.Text("Please consider this question and decide whether to allow or deny,"),
+				),
+			),
+			b.Div(
+				[]string{"allow-dir-actions"},
+				denyButton,
+				allowButton,
+			),
+		),
+	)
+}
+
+func allowDirMessageDone(button *b.Object, confirmed bool) {
+	var text string
+	if confirmed {
+		text = "Directory was allowed"
+	} else {
+		text = "Directory was denied"
+	}
+
+	message := button.ClosestByClassName("allow-dir-message")
+
+	actions := message.GetElementsByClassName("allow-dir-actions")[0]
+	buttons := actions.GetElementsByTagName("button")
+	for _, b := range buttons {
+		b.Disabled(true)
+	}
+
+	actions.RemoveChildren()
+	actions.Append(b.P(
+		b.Text(text),
+	))
+}
+
 func systemMessage(markdown string) *b.Object {
 	return b.Div(
 		[]string{"message", "system-message"},
