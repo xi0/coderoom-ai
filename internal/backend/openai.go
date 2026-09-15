@@ -195,7 +195,13 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 
 			resp, err := client.CreateChatCompletion(ctx, req)
 			if err != nil {
-				log.Fatalf("API call failed: %v", err)
+				errorMessage := fmt.Sprintf("API call failed: %v", err)
+				writeChannel <- wire.BackendMessage{
+					SystemMessage: &errorMessage,
+					WorkDone:      true,
+					EnablePrompt:  true,
+				}
+				break
 			}
 
 			msg := resp.Choices[0].Message
