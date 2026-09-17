@@ -250,23 +250,18 @@ func TestListDirMissingRequiredField(t *testing.T) {
 
 	tool := listDirTool()
 
-	// Test with missing relative_path field
+	// Test with missing relative_path field. A missing field defaults to "",
+	// which is treated as the root ("."). Since the root is empty, the tool
+	// reports that the directory is empty.
 	argsJSON := `{}`
 	_, err = tool.call(argsJSON, options)
 
-	// This should not error on JSON parsing, but will error when trying to open ""
-	// which should work (listing root), so let's test with a different scenario
-	// Actually, empty relative_path is valid and should list root
-	// Let's verify this works
-	result, err := tool.call(argsJSON, options)
-
-	if err != nil {
-		t.Fatalf("Expected no error for empty relative_path (should list root), got: %v", err)
+	if err == nil {
+		t.Fatal("Expected error for empty root directory, got nil")
 	}
 
-	// Empty directory should return empty string
-	if result != "" {
-		t.Errorf("Expected empty result for empty directory, got: %s", result)
+	if !strings.Contains(err.Error(), "directory is empty") {
+		t.Errorf("Expected error to contain 'directory is empty', got: %v", err)
 	}
 }
 
@@ -294,15 +289,14 @@ func TestListDirEmptyDirectory(t *testing.T) {
 
 	tool := listDirTool()
 	argsJSON := `{"relative_path": "."}`
-	result, err := tool.call(argsJSON, options)
+	_, err = tool.call(argsJSON, options)
 
-	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+	if err == nil {
+		t.Error("Expected error for empty directory, got nil")
 	}
 
-	// Empty directory should return empty string
-	if result != "" {
-		t.Errorf("Expected empty result for empty directory, got: %q", result)
+	if !strings.Contains(err.Error(), "directory is empty") {
+		t.Errorf("Expected error to contain 'directory is empty', got: %v", err)
 	}
 }
 
