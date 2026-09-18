@@ -414,3 +414,155 @@ func TestDeleteFileWithSpecialCharactersInName(t *testing.T) {
 		t.Error("Expected file to be deleted, but it still exists")
 	}
 }
+
+func TestDeleteFileRecordsDeletion(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "deletefile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	originalContent := "content to be deleted"
+	testFile := tmpDir + "/test.txt"
+	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := deleteFileTool()
+	argsJSON := `{"relative_path": "test.txt"}`
+	if _, err := tool.call(argsJSON, options); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	edit, ok := edits.edits["test.txt"]
+	if !ok {
+		t.Fatal("Expected delete_file to record an edit for test.txt")
+	}
+	if edit.OrigNonExistent {
+		t.Error("Expected OrigNonExistent to be false for an existing file")
+	}
+	if edit.OrigInfo == nil {
+		t.Fatal("Expected OrigInfo to be recorded for an existing file")
+	}
+	// The original content must be preserved even though the file was deleted.
+	if string(edit.OrigContent) != originalContent {
+		t.Errorf("Expected OrigContent %q, got %q", originalContent, edit.OrigContent)
+	}
+	if len(edit.Changes) != 1 {
+		t.Fatalf("Expected 1 change, got %d", len(edit.Changes))
+	}
+
+	change := edit.Changes[0]
+	if !change.Deleted {
+		t.Error("Expected change.Deleted to be true")
+	}
+	if change.Created {
+		t.Error("Expected change.Created to be false")
+	}
+}
+
+func TestDeleteFileRecordsDeletionInSubdirectory(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "deletefile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	if err := os.Mkdir(tmpDir+"/subdir", 0755); err != nil {
+		t.Fatalf("Failed to create subdirectory: %v", err)
+	}
+
+	originalContent := "nested content"
+	testFile := tmpDir + "/subdir/nested.txt"
+	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := deleteFileTool()
+	argsJSON := `{"relative_path": "subdir/nested.txt"}`
+	if _, err := tool.call(argsJSON, options); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	edit, ok := edits.edits["subdir/nested.txt"]
+	if !ok {
+		t.Fatalf("Expected delete_file to record an edit for subdir/nested.txt, got entries: %v", edits.edits)
+	}
+	if string(edit.OrigContent) != originalContent {
+		t.Errorf("Expected OrigContent %q, got %q", originalContent, edit.OrigContent)
+	}
+	if len(edit.Changes) != 1 || !edit.Changes[0].Deleted {
+		t.Error("Expected a single delete change")
+	}
+}
+
+func TestDeleteFileNotRecordedWhenRemovalFails(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "deletefile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := deleteFileTool()
+	argsJSON := `{"relative_path": "missing.txt"}`
+	if _, err := tool.call(argsJSON, options); err == nil {
+		t.Fatal("Expected an error deleting a non-existent file")
+	}
+
+	// A failed deletion must not record a change, even though the original
+	// (non-existent) state may have been registered before the attempt.
+	if edit, ok := edits.edits["missing.txt"]; ok && len(edit.Changes) != 0 {
+		t.Errorf("Expected no changes to be recorded on failure, got %d", len(edit.Changes))
+	}
+}

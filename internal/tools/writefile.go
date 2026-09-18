@@ -69,6 +69,12 @@ func writeFileTool() *Tool {
 				}
 			}
 
+			// Capture the original state of the file before it is modified so
+			// that the recorded edit references the pre-write contents.
+			if options.Edits != nil {
+				options.Edits.registerFile(args.RelativePath)
+			}
+
 			err = options.Root.WriteFile(args.RelativePath, content, 0644)
 			if err != nil {
 				return "", fmt.Errorf("failed to write file: %w", err)

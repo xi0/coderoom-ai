@@ -671,3 +671,171 @@ func TestEditFileWithoutModificationsPermission(t *testing.T) {
 		t.Logf("Got error with modifications=false: %v", err)
 	}
 }
+
+func TestEditFileRecordsEdit(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "editfile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	originalContent := "hello world"
+	testFile := tmpDir + "/test.txt"
+	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := editFileTool()
+	argsJSON := `{"relative_path": "test.txt", "old_string": "hello", "new_string": "goodbye"}`
+	if _, err := tool.call(argsJSON, options); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	edit, ok := edits.edits["test.txt"]
+	if !ok {
+		t.Fatal("Expected edit_file to record an edit for test.txt")
+	}
+	if edit.OrigNonExistent {
+		t.Error("Expected OrigNonExistent to be false for an existing file")
+	}
+	if edit.OrigInfo == nil {
+		t.Fatal("Expected OrigInfo to be recorded for an existing file")
+	}
+	// The original content must be the content before the edit was applied.
+	if string(edit.OrigContent) != originalContent {
+		t.Errorf("Expected OrigContent %q, got %q", originalContent, edit.OrigContent)
+	}
+	if len(edit.Changes) != 1 {
+		t.Fatalf("Expected 1 change, got %d", len(edit.Changes))
+	}
+
+	change := edit.Changes[0]
+	if string(change.Old) != "hello" {
+		t.Errorf("Expected change.Old %q, got %q", "hello", change.Old)
+	}
+	if string(change.New) != "goodbye" {
+		t.Errorf("Expected change.New %q, got %q", "goodbye", change.New)
+	}
+	if change.Deleted || change.Created {
+		t.Error("Expected change.Deleted and change.Created to be false")
+	}
+}
+
+func TestEditFileRecordsMultipleEdits(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "editfile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	originalContent := "aaa bbb ccc"
+	testFile := tmpDir + "/test.txt"
+	if err := os.WriteFile(testFile, []byte(originalContent), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := editFileTool()
+
+	first := `{"relative_path": "test.txt", "old_string": "aaa", "new_string": "xxx"}`
+	if _, err := tool.call(first, options); err != nil {
+		t.Fatalf("Expected no error on first edit, got: %v", err)
+	}
+
+	second := `{"relative_path": "test.txt", "old_string": "ccc", "new_string": "zzz"}`
+	if _, err := tool.call(second, options); err != nil {
+		t.Fatalf("Expected no error on second edit, got: %v", err)
+	}
+
+	edit, ok := edits.edits["test.txt"]
+	if !ok {
+		t.Fatal("Expected edit_file to record an edit for test.txt")
+	}
+	// The original content is registered before the first edit and must not be
+	// overwritten by the second edit.
+	if string(edit.OrigContent) != originalContent {
+		t.Errorf("Expected OrigContent %q, got %q", originalContent, edit.OrigContent)
+	}
+	if len(edit.Changes) != 2 {
+		t.Fatalf("Expected 2 changes, got %d", len(edit.Changes))
+	}
+	if string(edit.Changes[0].Old) != "aaa" || string(edit.Changes[0].New) != "xxx" {
+		t.Errorf("Unexpected first change: Old=%q New=%q", edit.Changes[0].Old, edit.Changes[0].New)
+	}
+	if string(edit.Changes[1].Old) != "ccc" || string(edit.Changes[1].New) != "zzz" {
+		t.Errorf("Unexpected second change: Old=%q New=%q", edit.Changes[1].Old, edit.Changes[1].New)
+	}
+}
+
+func TestEditFileNotRecordedWhenOldStringMissing(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "editfile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	if err := os.WriteFile(tmpDir+"/test.txt", []byte("some content"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := editFileTool()
+	argsJSON := `{"relative_path": "test.txt", "old_string": "missing", "new_string": "replacement"}`
+	if _, err := tool.call(argsJSON, options); err == nil {
+		t.Fatal("Expected an error when old_string is not found")
+	}
+
+	// A failed edit must not record anything.
+	if len(edits.edits) != 0 {
+		t.Errorf("Expected no edits to be recorded on failure, got %d entries", len(edits.edits))
+	}
+}

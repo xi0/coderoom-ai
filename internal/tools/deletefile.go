@@ -44,6 +44,12 @@ func deleteFileTool() *Tool {
 				ToolMessage: &toolString,
 			}
 
+			// Capture the original state of the file before it is deleted so
+			// that the recorded edit references the deleted contents.
+			if options.Edits != nil {
+				options.Edits.registerFile(args.RelativePath)
+			}
+
 			err := options.Root.Remove(args.RelativePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to delete file %q: %w", args.RelativePath, err)
