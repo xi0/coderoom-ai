@@ -77,6 +77,7 @@ type Tool struct {
 
 type ToolOptions struct {
 	Modifications       bool
+	Edits               *FileEdits
 	Root                *os.Root
 	WriteChannel        chan wire.BackendMessage
 	OptionChannel       chan int

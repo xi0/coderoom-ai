@@ -49,6 +49,10 @@ func deleteFileTool() *Tool {
 				return "", fmt.Errorf("failed to delete file %q: %w", args.RelativePath, err)
 			}
 
+			if options.Edits != nil {
+				options.Edits.DeleteFile(args.RelativePath)
+			}
+
 			return fmt.Sprintf("File deleted successfully:\n%s", args.RelativePath), nil
 		},
 	}

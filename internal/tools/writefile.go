@@ -2,7 +2,9 @@ package tools
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 
 	"github.com/xi0/coderoom-ai/internal/wire"
@@ -55,9 +57,25 @@ func writeFileTool() *Tool {
 				return "", fmt.Errorf("failed to create parent directory: %w", err)
 			}
 
-			err := options.Root.WriteFile(args.RelativePath, []byte(args.Content), 0644)
+			content := []byte(args.Content)
+			created := false
+
+			_, err := options.Root.Stat(args.RelativePath)
+			if err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					created = true
+				} else {
+					return "", fmt.Errorf("failed to stat file: %w", err)
+				}
+			}
+
+			err = options.Root.WriteFile(args.RelativePath, content, 0644)
 			if err != nil {
 				return "", fmt.Errorf("failed to write file: %w", err)
+			}
+
+			if options.Edits != nil {
+				options.Edits.WriteFile(args.RelativePath, content, created)
 			}
 
 			return fmt.Sprintf("Successfully wrote file: %s", args.RelativePath), nil

@@ -169,6 +169,8 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 	}
 	defer root.Close()
 
+	edits := tools.NewFileEdits(root)
+
 	messages := []openai.ChatCompletionMessage{
 		{
 			Role:    openai.ChatMessageRoleSystem,
@@ -177,14 +179,14 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 	}
 
 	for prompt := range promptChannel {
-		for {
-			messages = append(messages,
-				openai.ChatCompletionMessage{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt.prompt,
-				},
-			)
+		messages = append(messages,
+			openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleUser,
+				Content: prompt.prompt,
+			},
+		)
 
+		for {
 			client, provider := be.client()
 
 			req := openai.ChatCompletionRequest{
@@ -219,6 +221,7 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 				// Handle tool execution requests from the model
 				toolOptions := &tools.ToolOptions{
 					Modifications:       prompt.modifications,
+					Edits:               edits,
 					Root:                root,
 					WriteChannel:        writeChannel,
 					OptionChannel:       optionChannel,
