@@ -16,6 +16,8 @@ var (
 		"Refactor everything",
 		"I don't really care",
 	}
+
+	confirmationFunc func(chan wire.BackendMessage, bool)
 )
 
 type TestBackend struct {
@@ -24,6 +26,8 @@ type TestBackend struct {
 
 func (be *TestBackend) Run(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage) {
 	log.Println("Test backend")
+
+	confirmationFunc = confirmation
 
 	go func() {
 		for message := range readChannel {
@@ -44,7 +48,8 @@ You can use the following keywords to test different message types in the UI.
 * system
 * tool
 * proposal
-* options`
+* options
+* blocked`
 
 	writeChannel <- wire.BackendMessage{
 		Init: &wire.InitMessage{
@@ -70,9 +75,13 @@ func handleMessage(message wire.FrontendMessage, writeChannel chan wire.BackendM
 		} else if strings.Contains(*message.Prompt, "tool") {
 			go toolMessage(writeChannel)
 		} else if strings.Contains(*message.Prompt, "proposal") {
+			confirmationFunc = confirmation
 			go proposalMessage(writeChannel)
 		} else if strings.Contains(*message.Prompt, "options") {
 			go optionsMessage(writeChannel)
+		} else if strings.Contains(*message.Prompt, "blocked") {
+			confirmationFunc = blockedConfirmation
+			go blockedMessage(writeChannel)
 		} else {
 			go unknownMessage(writeChannel)
 		}
@@ -85,7 +94,7 @@ func handleMessage(message wire.FrontendMessage, writeChannel chan wire.BackendM
 
 	if message.Confirmation != nil {
 		log.Printf("Confirmation: %t\n", *message.Confirmation)
-		confirmation(writeChannel, *message.Confirmation)
+		confirmationFunc(writeChannel, *message.Confirmation)
 	}
 }
 
@@ -219,6 +228,52 @@ func chosenOption(writeChannel chan wire.BackendMessage, option int) {
 	time.Sleep(2 * time.Second)
 
 	systemMessage := fmt.Sprintf("I will proceed with the option %q.", Options[option])
+
+	writeChannel <- wire.BackendMessage{
+		SystemMessage: &systemMessage,
+		WorkDone:      true,
+		EnablePrompt:  true,
+	}
+}
+
+func blockedMessage(writeChannel chan wire.BackendMessage) {
+	time.Sleep(2 * time.Second)
+
+	writeChannel <- wire.BackendMessage{
+		BlockedMessage: &wire.BlockedMessage{
+			Action: "Build project",
+			Filenames: []string{
+				"/foo/bar",
+				"/foo/baz",
+				"/test/party",
+			},
+		},
+		WorkDone: true,
+	}
+}
+
+func blockedConfirmation(writeChannel chan wire.BackendMessage, confirmation bool) {
+	if !confirmation {
+		systemMessage := `I will not run the action.`
+
+		writeChannel <- wire.BackendMessage{
+			SystemMessage: &systemMessage,
+			WorkDone:      true,
+			EnablePrompt:  true,
+		}
+
+		return
+	}
+
+	toolMessage := "build_project()"
+
+	writeChannel <- wire.BackendMessage{
+		ToolMessage: &toolMessage,
+	}
+
+	time.Sleep(2 * time.Second)
+
+	systemMessage := `I successfully ran the action.`
 
 	writeChannel <- wire.BackendMessage{
 		SystemMessage: &systemMessage,

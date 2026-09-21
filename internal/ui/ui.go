@@ -118,6 +118,7 @@ func initDone() {
 			ToolMessage:     handleToolMessage,
 			ProposalMessage: handleProposalMessage,
 			OptionsMessage:  handleOptionsMessage,
+			BlockedMessage:  handleBlockedMessage,
 			UpdateProgress:  handleUpdateProgress,
 			WorkDone:        handleWorkDone,
 			EnablePrompt:    handleEnablePrompt,
@@ -847,6 +848,10 @@ func sendChosenOption(option int) {
 	webSocket.Send(wire.FrontendMessage{
 		ChosenOption: &option,
 	})
+}
+
+func handleBlockedMessage(message *wire.BlockedMessage) {
+	addMessage(blockedMessage(message.Action, message.Filenames, sendConfirmation))
 }
 
 func handleUpdateProgress(message *wire.ProgressMessage) {

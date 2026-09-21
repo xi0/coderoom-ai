@@ -79,7 +79,7 @@ func allowDirMessage(dir string, confirm func(bool)) *b.Object {
 			),
 			b.P(
 				b.Em(
-					b.Text("Please consider this question and decide whether to allow or deny,"),
+					b.Text("Please consider this question and decide whether to allow or deny."),
 				),
 			),
 			b.Div(
@@ -214,6 +214,98 @@ func proposalMessageDone(button *b.Object, confirmed bool) {
 	message := button.ClosestByClassName("plan-message")
 
 	actions := message.GetElementsByClassName("plan-actions")[0]
+	buttons := actions.GetElementsByTagName("button")
+	for _, b := range buttons {
+		b.Disabled(true)
+	}
+
+	actions.RemoveChildren()
+	actions.Append(b.P(
+		b.Text(text),
+	))
+
+	progress := doc.GetElementByID("working-progress")
+	progress.Style().Width(fmt.Sprintf("%d%%", 0))
+
+	workingMessage := doc.GetElementByID("working-message")
+	textElement := workingMessage.GetElementsByClassName("message-text")[0]
+	textElement.TextContent("Working...")
+
+	workingMessage.RemoveClass("hidden")
+	workingMessage.ScrollIntoView()
+}
+
+func blockedMessage(action string, filenames []string, confirm func(bool)) *b.Object {
+	denyButton := b.Button(
+		[]string{"plan-btn", "blocked-btn-deny"},
+		b.Text("Deny"),
+	)
+
+	denyButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		blockedMessageDone(this, false)
+		go confirm(false)
+		return nil
+	})
+
+	allowButton := b.Button(
+		[]string{"plan-btn", "blocked-btn-allow"},
+		b.Text("Allow"),
+	)
+
+	allowButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		blockedMessageDone(this, true)
+		go confirm(true)
+		return nil
+	})
+
+	var fileItems []*b.Object
+	for _, filename := range filenames {
+		fileItems = append(fileItems, b.LI(
+			b.Text(filename),
+		))
+	}
+
+	return b.Div(
+		[]string{"message", "system-message", "blocked-message"},
+		b.Div(
+			[]string{"message-content"},
+			b.H3(
+				b.Text("Action blocked"),
+			),
+			b.P(
+				b.Text(fmt.Sprintf("The action %q has been blocked, because the following files were modified during this session:", action)),
+			),
+			b.UL(
+				fileItems...,
+			),
+			b.P(
+				b.Em(
+					b.Text("Please review the changes and decide whether to allow or deny the action"),
+				),
+			),
+			b.Div(
+				[]string{"blocked-actions"},
+				denyButton,
+				allowButton,
+			),
+		),
+	)
+}
+
+func blockedMessageDone(button *b.Object, confirmed bool) {
+	var text string
+	if confirmed {
+		text = "Action was allowed"
+	} else {
+		text = "Action was denied"
+	}
+
+	doc := b.Document()
+	message := button.ClosestByClassName("blocked-message")
+
+	actions := message.GetElementsByClassName("blocked-actions")[0]
 	buttons := actions.GetElementsByTagName("button")
 	for _, b := range buttons {
 		b.Disabled(true)
