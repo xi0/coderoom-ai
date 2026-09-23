@@ -3,6 +3,7 @@ package tools
 import (
 	"io/fs"
 	"os"
+	"sort"
 )
 
 // FileEdits keeps track of changes to different files during a session.
@@ -74,6 +75,23 @@ func (e *FileEdits) registerFile(relativePath string) {
 	}
 
 	e.edits[relativePath] = edit
+}
+
+func (e *FileEdits) Filenames() []string {
+	if e == nil {
+		return nil
+	}
+
+	result := make([]string, len(e.edits))
+
+	i := 0
+	for f, _ := range e.edits {
+		result[i] = f
+		i++
+	}
+	sort.Strings(result)
+
+	return result
 }
 
 // FileEdit keeps track of all changes to one file. The Orig* fields holds the

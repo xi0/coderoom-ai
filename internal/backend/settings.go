@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/xi0/coderoom-ai/internal/blockingfiles"
 	"github.com/xi0/coderoom-ai/internal/wire"
 )
 
@@ -416,4 +418,41 @@ func (s *Settings) serveBlockingFiles(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("json.NewEncoder().Encode(): %v", err)
 	}
+}
+
+// matchingFiles returns the paths of all regular files under the project
+// directory that match the given pattern. The returned paths are relative to
+// the project root and use "/" as separator. The .git directory is skipped.
+func (s *Settings) matchingFiles(pattern string) ([]string, error) {
+	root := s.ProjectDir
+	matches := []string{}
+
+	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			if d.Name() == ".git" {
+				return fs.SkipDir
+			}
+			return nil
+		}
+
+		rel, err := filepath.Rel(root, p)
+		if err != nil {
+			return err
+		}
+
+		if blockingfiles.MatchBlockingFile(pattern, rel) {
+			matches = append(matches, filepath.ToSlash(rel))
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return matches, nil
 }

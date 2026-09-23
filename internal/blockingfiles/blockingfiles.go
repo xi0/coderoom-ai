@@ -1,7 +1,6 @@
-package backend
+package blockingfiles
 
 import (
-	"io/fs"
 	"path"
 	"path/filepath"
 	"strings"
@@ -33,39 +32,17 @@ func MatchBlockingFile(pattern, relPath string) bool {
 	return err == nil && matched
 }
 
-// matchingFiles returns the paths of all regular files under the project
-// directory that match the given pattern. The returned paths are relative to
-// the project root and use "/" as separator. The .git directory is skipped.
-func (s *Settings) matchingFiles(pattern string) ([]string, error) {
-	root := s.ProjectDir
-	matches := []string{}
+func BlockingFilesInList(patterns, filenames []string) []string {
+	var result []string
 
-	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			if d.Name() == ".git" {
-				return fs.SkipDir
+	for _, filename := range filenames {
+		for _, pattern := range patterns {
+			if MatchBlockingFile(pattern, filename) {
+				result = append(result, filename)
+				break
 			}
-			return nil
 		}
-
-		rel, err := filepath.Rel(root, p)
-		if err != nil {
-			return err
-		}
-
-		if MatchBlockingFile(pattern, rel) {
-			matches = append(matches, filepath.ToSlash(rel))
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 
-	return matches, nil
+	return result
 }

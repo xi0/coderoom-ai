@@ -1,4 +1,4 @@
-bin/coderoom-ai: cmd/coderoom-ai/main.go web/web.go web/assets/index.html web/assets/logo.png web/assets/styles.css web/dist/main.wasm web/dist/wasm_exec.js internal/backend/*.go internal/common/*.go internal/wire/*.go internal/tools/*.go
+bin/coderoom-ai: cmd/coderoom-ai/main.go web/web.go web/assets/index.html web/assets/logo.png web/assets/styles.css web/dist/main.wasm web/dist/wasm_exec.js internal/backend/*.go internal/blockingfiles/*.go internal/common/*.go internal/wire/*.go internal/tools/*.go
 	go build -o bin/coderoom-ai cmd/coderoom-ai/main.go
 
 web/dist/main.wasm: web/wasm/main.go internal/browser/*.go internal/ui/*.go internal/common/*.go internal/wire/*.go
@@ -9,4 +9,5 @@ web/dist/wasm_exec.js:
 
 test:
 	go test -v internal/backend/*.go
+	go test -v internal/blockingfiles/*.go
 	go test -v internal/tools/*.go
