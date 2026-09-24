@@ -41,6 +41,7 @@ func proposePlanTool() *Tool {
 
 			options.WriteChannel <- wire.BackendMessage{
 				ProposalMessage: &args.Plan,
+				WorkDone:        true,
 			}
 
 			confirmed := <-options.ConfirmationChannel
