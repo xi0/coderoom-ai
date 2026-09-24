@@ -138,6 +138,10 @@ You can configure tool behavior in your project's `coderoom-ai.json` file:
 ```
 
 - **`blocking_files`**: Tools will only run if the specified files have not been modified by the agent, preventing unsafe operations on changed files.
+  - A pattern with no `/` characters (e.g. `*_test.go`) matches files by name in any directory under the project root.
+  - A pattern with one or more `/` characters (e.g. `internal/ui/*.go`) is matched as a path relative to the project root. A leading `/` is treated as being anchored at the project root (e.g. `/Makefile`).
+  - `*` matches any sequence of non-`/` characters and `?` matches a single non-`/` character.
+  - In Project Settings each pattern can be tested against the current project with the **Test** button, which lists the files that match.
 
 ## Security
 

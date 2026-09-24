@@ -21,6 +21,7 @@ type BackendMessage struct {
 	ToolMessage     *string          `json:"tool_message,omitempty"`
 	ProposalMessage *string          `json:"proposal_message,omitempty"`
 	OptionsMessage  *OptionsMessage  `json:"options_message,omitempty"`
+	BlockedMessage  *BlockedMessage  `json:"blocked_message,omitempty"`
 	UpdateProgress  *ProgressMessage `json:"update_progress,omitempty"`
 	WorkDone        bool             `json:"work_done"`
 	EnablePrompt    bool             `json:"enable_prompt"`
@@ -36,6 +37,11 @@ type InitMessage struct {
 type OptionsMessage struct {
 	Description string   `json:"description,omitempty"`
 	Options     []string `json:"options,omitempty"`
+}
+
+type BlockedMessage struct {
+	Action    string   `json:"action,omitempty"`
+	Filenames []string `json:"filenames,omitempty"`
 }
 
 type ProgressMessage struct {
@@ -78,4 +84,15 @@ type ProjectSettings struct {
 type ToolSettings struct {
 	Command       string   `json:"command"`
 	BlockingFiles []string `json:"blocking_files"`
+}
+
+// Requests the list of project files matching a blocking file pattern.
+
+type BlockingFilesRequest struct {
+	Pattern string `json:"pattern"`
+}
+
+type BlockingFilesResponse struct {
+	Files []string `json:"files"`
+	Error string   `json:"error,omitempty"`
 }

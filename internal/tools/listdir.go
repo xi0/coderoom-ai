@@ -60,6 +60,10 @@ func listDirTool() *Tool {
 				return "", fmt.Errorf("failed to read directory: %w", err)
 			}
 
+			if len(entries) == 0 {
+				return "", fmt.Errorf("directory is empty")
+			}
+
 			var result []string
 			for _, entry := range entries {
 				kind := "file"

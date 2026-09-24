@@ -19,6 +19,7 @@ type MessageHandlers struct {
 	ToolMessage     func(string)
 	ProposalMessage func(string)
 	OptionsMessage  func(*wire.OptionsMessage)
+	BlockedMessage  func(*wire.BlockedMessage)
 	UpdateProgress  func(*wire.ProgressMessage)
 	WorkDone        func()
 	EnablePrompt    func()
@@ -98,6 +99,9 @@ func (ws *WebSocket) onMessage(data string) {
 	}
 	if message.OptionsMessage != nil {
 		ws.handlers.OptionsMessage(message.OptionsMessage)
+	}
+	if message.BlockedMessage != nil {
+		ws.handlers.BlockedMessage(message.BlockedMessage)
 	}
 	if message.UpdateProgress != nil {
 		ws.handlers.UpdateProgress(message.UpdateProgress)

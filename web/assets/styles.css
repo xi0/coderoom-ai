@@ -450,6 +450,50 @@ html, body {
   background-color: var(--accent-hover);
 }
 
+/* Blocked Message Styling */
+.blocked-message .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blocked-message p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.blocked-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.blocked-btn-deny {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.blocked-btn-deny:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.blocked-btn-allow {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.blocked-btn-allow:hover {
+  background-color: var(--accent-hover);
+}
+
 /* Progress Bar Styling */
 .progress-container {
   width: 100%;
@@ -915,6 +959,84 @@ dialog .settings-section textarea:focus {
 
 .dir-item button:hover {
   background-color: #dc2626;
+}
+
+/* Blocking Files List */
+.blocking-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.blocking-files-list:empty {
+  display: none;
+}
+
+.blocking-file-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.blocking-file-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blocking-file-pattern {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: monospace;
+}
+
+.blocking-file-pattern:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.blocking-file-header button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.blocking-file-header .delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.blocking-file-header .delete-btn:hover {
+  background-color: #dc2626;
+}
+
+.blocking-file-results {
+  font-size: 0.85rem;
+  font-family: monospace;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.blocking-file-results.hidden {
+  display: none;
 }
 
 /* Settings Actions */

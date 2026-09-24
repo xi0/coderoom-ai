@@ -94,6 +94,12 @@ func init() {
 	runTestsBlockPolicy := doc.GetElementByID("run-tests-block-policy")
 	runTestsBlockPolicy.AddChangeHandler(changeBlockPolicy)
 
+	buildProjectAddBlockingBtn := doc.GetElementByID("build-project-add-blocking-btn")
+	buildProjectAddBlockingBtn.AddClickHandler(addBlockingFile)
+
+	runTestsAddBlockingBtn := doc.GetElementByID("run-tests-add-blocking-btn")
+	runTestsAddBlockingBtn.AddClickHandler(addBlockingFile)
+
 	// Add handler for connection lost dialog
 
 	lostConnectionButton := doc.GetElementByID("connection-lost").GetElementsByTagName("button")[0]
@@ -112,6 +118,7 @@ func initDone() {
 			ToolMessage:     handleToolMessage,
 			ProposalMessage: handleProposalMessage,
 			OptionsMessage:  handleOptionsMessage,
+			BlockedMessage:  handleBlockedMessage,
 			UpdateProgress:  handleUpdateProgress,
 			WorkDone:        handleWorkDone,
 			EnablePrompt:    handleEnablePrompt,
@@ -401,19 +408,27 @@ func renderTool(prefix string, settings *wire.ToolSettings) {
 	blockFilelist := doc.GetElementByID(fmt.Sprintf("%s-block-filelist", prefix))
 	formGroup := blockFilelist.ClosestByClassName("form-group")
 
+	// Start with an empty list; the patterns are added below when the policy is
+	// set to "list".
+	renderBlockingFiles(prefix, nil)
+
 	if settings != nil {
 		input.SetValue(settings.Command)
-		if len(settings.BlockingFiles) == 1 && settings.BlockingFiles[0] == "*" {
+		if len(settings.BlockingFiles) == 0 {
+			blockPolicy.SetValue("none")
+			formGroup.AddClass("hidden")
+		} else if len(settings.BlockingFiles) == 1 && settings.BlockingFiles[0] == "*" {
 			blockPolicy.SetValue("any")
 			formGroup.AddClass("hidden")
 		} else {
 			blockPolicy.SetValue("list")
 			formGroup.RemoveClass("hidden")
-			blockFilelist.SetValue(strings.Join(settings.BlockingFiles, "\n"))
+			renderBlockingFiles(prefix, settings.BlockingFiles)
 		}
 	} else {
 		input.SetValue("")
 		blockPolicy.SetValue("any")
+		formGroup.AddClass("hidden")
 	}
 }
 
@@ -478,12 +493,20 @@ func collectTool(prefix string) *wire.ToolSettings {
 
 	if blockPolicy.GetValue() == "any" {
 		settings.BlockingFiles = []string{"*"}
+	} else if blockPolicy.GetValue() == "none" {
+		settings.BlockingFiles = []string{}
 	} else {
-		files := strings.Split(blockFilelist.GetValue(), "\n")
+		items := blockFilelist.GetElementsByClassName("blocking-file-item")
 
-		for _, f := range files {
-			if !onlyWhiteSpace.MatchString(f) {
-				settings.BlockingFiles = append(settings.BlockingFiles, strings.TrimSpace(f))
+		for _, item := range items {
+			inputs := item.GetElementsByClassName("blocking-file-pattern")
+			if len(inputs) == 0 {
+				continue
+			}
+
+			pattern := strings.TrimSpace(inputs[0].GetValue())
+			if pattern != "" {
+				settings.BlockingFiles = append(settings.BlockingFiles, pattern)
 			}
 		}
 	}
@@ -503,6 +526,172 @@ func changeBlockPolicy(this, e *browser.Object) any {
 	}
 
 	return nil
+}
+
+// =============================================
+// Blocking Files Helper Functions
+// =============================================
+
+func renderBlockingFiles(prefix string, patterns []string) {
+	doc := browser.Document()
+	list := doc.GetElementByID(fmt.Sprintf("%s-block-filelist", prefix))
+	list.RemoveChildren()
+
+	for _, pattern := range patterns {
+		list.Append(createBlockingFileElement(pattern))
+	}
+}
+
+func createBlockingFileElement(pattern string) *browser.Object {
+	patternInput := browser.Input(
+		[]string{"blocking-file-pattern"},
+		browser.InputTypeText,
+		pattern,
+	)
+	patternInput.SetAttribute("placeholder", "e.g. src/*.go")
+
+	testBtn := browser.Button(
+		[]string{"secondary-btn"},
+		browser.Text("Test"),
+	)
+	testBtn.AddClickHandler(testBlockingFile)
+
+	deleteBtn := browser.Button(
+		[]string{"delete-btn"},
+		browser.Text("Delete"),
+	)
+	deleteBtn.AddClickHandler(deleteBlockingFile)
+
+	header := browser.Div(
+		[]string{"blocking-file-header"},
+		patternInput,
+		testBtn,
+		deleteBtn,
+	)
+
+	results := browser.Div(
+		[]string{"blocking-file-results", "hidden"},
+	)
+
+	return browser.Div(
+		[]string{"blocking-file-item"},
+		header,
+		results,
+	)
+}
+
+func addBlockingFile(this, e *browser.Object) any {
+	e.PreventDefault()
+
+	id := this.GetAttribute("id")
+	prefix := strings.TrimSuffix(id, "-add-blocking-btn")
+
+	doc := browser.Document()
+	list := doc.GetElementByID(fmt.Sprintf("%s-block-filelist", prefix))
+
+	item := createBlockingFileElement("")
+	list.Append(item)
+
+	input := item.GetElementsByClassName("blocking-file-pattern")[0]
+	input.Focus()
+
+	return nil
+}
+
+func deleteBlockingFile(this, e *browser.Object) any {
+	e.PreventDefault()
+
+	item := this.ClosestByClassName("blocking-file-item")
+	if item == nil {
+		return nil
+	}
+
+	input := item.GetElementsByClassName("blocking-file-pattern")[0]
+	pattern := input.GetValue()
+
+	if !browser.Confirm(fmt.Sprintf("Are you sure you want to delete the pattern %q?", pattern)) {
+		return nil
+	}
+
+	item.Remove()
+
+	return nil
+}
+
+func testBlockingFile(this, e *browser.Object) any {
+	e.PreventDefault()
+
+	item := this.ClosestByClassName("blocking-file-item")
+	if item == nil {
+		return nil
+	}
+
+	input := item.GetElementsByClassName("blocking-file-pattern")[0]
+	pattern := input.GetValue()
+
+	results := item.GetElementsByClassName("blocking-file-results")[0]
+	results.RemoveClass("hidden")
+	results.TextContent("Testing...")
+
+	request := wire.BlockingFilesRequest{
+		Pattern: pattern,
+	}
+
+	jsonData, err := json.Marshal(request)
+	if err != nil {
+		fmt.Printf("JSON marshal error: %v\n", err)
+		results.TextContent("Unable to test pattern.")
+		return nil
+	}
+
+	location := browser.Document().Location()
+	url := fmt.Sprintf("%s//%s/settings/project/blocking-files", location.Protocol, location.Host)
+
+	go func() {
+		resp, err := http.DefaultClient.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			fmt.Printf("Post(): %v\n", err)
+			results.TextContent(fmt.Sprintf("Request failed: %v", err))
+			return
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			results.TextContent(fmt.Sprintf("Request failed with status %q", resp.Status))
+			return
+		}
+
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("io.ReadAll(): %v\n", err)
+			results.TextContent("Unable to read response.")
+			return
+		}
+
+		var response wire.BlockingFilesResponse
+		if err := json.Unmarshal(data, &response); err != nil {
+			fmt.Printf("JSON unmarshal error: %v\n", err)
+			results.TextContent("Unable to parse response.")
+			return
+		}
+
+		renderBlockingFileResults(results, response)
+	}()
+
+	return nil
+}
+
+func renderBlockingFileResults(results *browser.Object, response wire.BlockingFilesResponse) {
+	if response.Error != "" {
+		results.TextContent(fmt.Sprintf("Error: %s", response.Error))
+		return
+	}
+
+	if len(response.Files) == 0 {
+		results.TextContent("No files match this pattern.")
+		return
+	}
+
+	results.TextContent(strings.Join(response.Files, "\n"))
 }
 
 func adjustPromptHeight(this, e *browser.Object) any {
@@ -659,6 +848,10 @@ func sendChosenOption(option int) {
 	webSocket.Send(wire.FrontendMessage{
 		ChosenOption: &option,
 	})
+}
+
+func handleBlockedMessage(message *wire.BlockedMessage) {
+	addMessage(blockedMessage(message.Action, message.Filenames, sendConfirmation))
 }
 
 func handleUpdateProgress(message *wire.ProgressMessage) {

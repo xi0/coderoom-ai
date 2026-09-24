@@ -1,0 +1,205 @@
+TOOLS PROBE RAN
+=== RUN   TestDeleteFileValidFile
+--- PASS: TestDeleteFileValidFile (0.00s)
+=== RUN   TestDeleteFileNonExistentFile
+--- PASS: TestDeleteFileNonExistentFile (0.00s)
+=== RUN   TestDeleteFileInvalidJSON
+--- PASS: TestDeleteFileInvalidJSON (0.00s)
+=== RUN   TestDeleteFileMissingRequiredField
+--- PASS: TestDeleteFileMissingRequiredField (0.00s)
+=== RUN   TestDeleteFileSubdirectory
+--- PASS: TestDeleteFileSubdirectory (0.00s)
+=== RUN   TestDeleteFileEmptyPath
+--- PASS: TestDeleteFileEmptyPath (0.00s)
+=== RUN   TestDeleteFileMultipleFiles
+--- PASS: TestDeleteFileMultipleFiles (0.00s)
+=== RUN   TestDeleteFileWithSpecialCharactersInName
+--- PASS: TestDeleteFileWithSpecialCharactersInName (0.00s)
+=== RUN   TestEditFileSuccessfulEdit
+--- PASS: TestEditFileSuccessfulEdit (0.00s)
+=== RUN   TestEditFileOldStringNotFound
+--- PASS: TestEditFileOldStringNotFound (0.00s)
+=== RUN   TestEditFileNonExistentFile
+--- PASS: TestEditFileNonExistentFile (0.00s)
+=== RUN   TestEditFileInvalidJSON
+--- PASS: TestEditFileInvalidJSON (0.00s)
+=== RUN   TestEditFileMissingRequiredFields
+--- PASS: TestEditFileMissingRequiredFields (0.00s)
+=== RUN   TestEditFileEmptyStrings
+--- PASS: TestEditFileEmptyStrings (0.00s)
+=== RUN   TestEditFileMultipleOccurrences
+--- PASS: TestEditFileMultipleOccurrences (0.00s)
+=== RUN   TestEditFileSpecialCharacters
+--- PASS: TestEditFileSpecialCharacters (0.00s)
+=== RUN   TestEditFileSubdirectory
+--- PASS: TestEditFileSubdirectory (0.00s)
+=== RUN   TestEditFileBinaryContent
+--- PASS: TestEditFileBinaryContent (0.00s)
+=== RUN   TestEditFileLargeContent
+--- PASS: TestEditFileLargeContent (0.00s)
+=== RUN   TestEditFileNewlineHandling
+--- PASS: TestEditFileNewlineHandling (0.00s)
+=== RUN   TestEditFileWithoutModificationsPermission
+--- PASS: TestEditFileWithoutModificationsPermission (0.00s)
+=== RUN   TestGrepValidPatternWithMatches
+--- PASS: TestGrepValidPatternWithMatches (0.00s)
+=== RUN   TestGrepNoMatchesFound
+--- PASS: TestGrepNoMatchesFound (0.00s)
+=== RUN   TestGrepCaseInsensitive
+--- PASS: TestGrepCaseInsensitive (0.00s)
+=== RUN   TestGrepCaseSensitive
+--- PASS: TestGrepCaseSensitive (0.00s)
+=== RUN   TestGrepInvalidRegex
+--- PASS: TestGrepInvalidRegex (0.00s)
+=== RUN   TestGrepEmptyPattern
+--- PASS: TestGrepEmptyPattern (0.00s)
+=== RUN   TestGrepInvalidJSON
+--- PASS: TestGrepInvalidJSON (0.00s)
+=== RUN   TestGrepInSubdirectory
+--- PASS: TestGrepInSubdirectory (0.00s)
+=== RUN   TestGrepSkipHiddenFiles
+--- PASS: TestGrepSkipHiddenFiles (0.00s)
+=== RUN   TestGrepSkipHiddenDirectories
+--- PASS: TestGrepSkipHiddenDirectories (0.00s)
+=== RUN   TestGrepSkipBinaryFiles
+--- PASS: TestGrepSkipBinaryFiles (0.00s)
+=== RUN   TestGrepSkipCommonDirectories
+--- PASS: TestGrepSkipCommonDirectories (0.00s)
+=== RUN   TestGrepRegexPattern
+--- PASS: TestGrepRegexPattern (0.00s)
+=== RUN   TestGrepMultipleMatchesInSameFile
+--- PASS: TestGrepMultipleMatchesInSameFile (0.00s)
+=== RUN   TestGrepEmptyDirectory
+--- PASS: TestGrepEmptyDirectory (0.00s)
+=== RUN   TestGrepWithRelativePathDot
+--- PASS: TestGrepWithRelativePathDot (0.00s)
+=== RUN   TestGrepWithEmptyRelativePath
+--- PASS: TestGrepWithEmptyRelativePath (0.00s)
+=== RUN   TestGrepSkipCVSDirectory
+--- PASS: TestGrepSkipCVSDirectory (0.00s)
+=== RUN   TestListDirValidDirectory
+--- PASS: TestListDirValidDirectory (0.00s)
+=== RUN   TestListDirNonExistentDirectory
+--- PASS: TestListDirNonExistentDirectory (0.00s)
+=== RUN   TestListDirRootDirectory
+--- PASS: TestListDirRootDirectory (0.00s)
+=== RUN   TestListDirInvalidJSON
+--- PASS: TestListDirInvalidJSON (0.00s)
+=== RUN   TestListDirMissingRequiredField
+--- PASS: TestListDirMissingRequiredField (0.00s)
+=== RUN   TestListDirEmptyDirectory
+--- PASS: TestListDirEmptyDirectory (0.00s)
+=== RUN   TestListDirMultipleFiles
+--- PASS: TestListDirMultipleFiles (0.00s)
+=== RUN   TestPresentOptionsValidSelection
+--- PASS: TestPresentOptionsValidSelection (0.00s)
+=== RUN   TestPresentOptionsBoundarySelections
+=== RUN   TestPresentOptionsBoundarySelections/first_option
+=== RUN   TestPresentOptionsBoundarySelections/last_option
+--- PASS: TestPresentOptionsBoundarySelections (0.00s)
+    --- PASS: TestPresentOptionsBoundarySelections/first_option (0.00s)
+    --- PASS: TestPresentOptionsBoundarySelections/last_option (0.00s)
+=== RUN   TestPresentOptionsEmptyOptions
+--- PASS: TestPresentOptionsEmptyOptions (0.00s)
+=== RUN   TestPresentOptionsInvalidJSON
+--- PASS: TestPresentOptionsInvalidJSON (0.00s)
+=== RUN   TestPresentOptionsSelectionOutOfRange
+=== RUN   TestPresentOptionsSelectionOutOfRange/negative
+=== RUN   TestPresentOptionsSelectionOutOfRange/equal_to_length
+=== RUN   TestPresentOptionsSelectionOutOfRange/greater_than_length
+--- PASS: TestPresentOptionsSelectionOutOfRange (0.00s)
+    --- PASS: TestPresentOptionsSelectionOutOfRange/negative (0.00s)
+    --- PASS: TestPresentOptionsSelectionOutOfRange/equal_to_length (0.00s)
+    --- PASS: TestPresentOptionsSelectionOutOfRange/greater_than_length (0.00s)
+=== RUN   TestPresentOptionsMissingPrompt
+--- PASS: TestPresentOptionsMissingPrompt (0.00s)
+=== RUN   TestPresentOptionsPreservesValues
+--- PASS: TestPresentOptionsPreservesValues (0.00s)
+=== RUN   TestPresentOptionsSendsMessageBeforeSelection
+--- PASS: TestPresentOptionsSendsMessageBeforeSelection (0.00s)
+=== RUN   TestProposePlanConfirmed
+--- PASS: TestProposePlanConfirmed (0.00s)
+=== RUN   TestProposePlanRejected
+--- PASS: TestProposePlanRejected (0.00s)
+=== RUN   TestProposePlanInvalidJSON
+--- PASS: TestProposePlanInvalidJSON (0.00s)
+=== RUN   TestProposePlanMissingPlanField
+--- PASS: TestProposePlanMissingPlanField (0.00s)
+=== RUN   TestProposePlanPreservesMarkdown
+--- PASS: TestProposePlanPreservesMarkdown (0.00s)
+=== RUN   TestProposePlanSendsProposalBeforeConfirmation
+--- PASS: TestProposePlanSendsProposalBeforeConfirmation (0.00s)
+=== RUN   TestReadFileValidFile
+--- PASS: TestReadFileValidFile (0.00s)
+=== RUN   TestReadFileNonExistentFile
+--- PASS: TestReadFileNonExistentFile (0.00s)
+=== RUN   TestReadFileRootDirectory
+--- PASS: TestReadFileRootDirectory (0.00s)
+=== RUN   TestReadFileInvalidJSON
+--- PASS: TestReadFileInvalidJSON (0.00s)
+=== RUN   TestReadFileMissingRequiredField
+--- PASS: TestReadFileMissingRequiredField (0.00s)
+=== RUN   TestReadFileEmptyFile
+--- PASS: TestReadFileEmptyFile (0.00s)
+=== RUN   TestReadFileWithSpecialCharacters
+--- PASS: TestReadFileWithSpecialCharacters (0.00s)
+=== RUN   TestReadFileSubdirectory
+--- PASS: TestReadFileSubdirectory (0.00s)
+=== RUN   TestReadFileLargeContent
+--- PASS: TestReadFileLargeContent (0.00s)
+=== RUN   TestReadFileBinaryContent
+--- PASS: TestReadFileBinaryContent (0.00s)
+=== RUN   TestReportProgressValidWithPercent
+--- PASS: TestReportProgressValidWithPercent (0.00s)
+=== RUN   TestReportProgressMissingPercent
+--- PASS: TestReportProgressMissingPercent (0.00s)
+=== RUN   TestReportProgressBoundaryPercent
+=== RUN   TestReportProgressBoundaryPercent/zero
+=== RUN   TestReportProgressBoundaryPercent/hundred
+--- PASS: TestReportProgressBoundaryPercent (0.00s)
+    --- PASS: TestReportProgressBoundaryPercent/zero (0.00s)
+    --- PASS: TestReportProgressBoundaryPercent/hundred (0.00s)
+=== RUN   TestReportProgressClampsPercent
+=== RUN   TestReportProgressClampsPercent/negative_clamped_to_zero
+=== RUN   TestReportProgressClampsPercent/large_negative_clamped_to_zero
+=== RUN   TestReportProgressClampsPercent/above_hundred_clamped
+=== RUN   TestReportProgressClampsPercent/very_large_clamped_to_hundred
+--- PASS: TestReportProgressClampsPercent (0.00s)
+    --- PASS: TestReportProgressClampsPercent/negative_clamped_to_zero (0.00s)
+    --- PASS: TestReportProgressClampsPercent/large_negative_clamped_to_zero (0.00s)
+    --- PASS: TestReportProgressClampsPercent/above_hundred_clamped (0.00s)
+    --- PASS: TestReportProgressClampsPercent/very_large_clamped_to_hundred (0.00s)
+=== RUN   TestReportProgressInvalidJSON
+--- PASS: TestReportProgressInvalidJSON (0.00s)
+=== RUN   TestReportProgressEmptyDescription
+--- PASS: TestReportProgressEmptyDescription (0.00s)
+=== RUN   TestReportProgressPreservesDescription
+--- PASS: TestReportProgressPreservesDescription (0.00s)
+=== RUN   TestWriteFileCreateNewFile
+--- PASS: TestWriteFileCreateNewFile (0.00s)
+=== RUN   TestWriteFileOverwriteExistingFile
+--- PASS: TestWriteFileOverwriteExistingFile (0.00s)
+=== RUN   TestWriteFileCreateInSubdirectory
+--- PASS: TestWriteFileCreateInSubdirectory (0.00s)
+=== RUN   TestWriteFileInvalidJSON
+--- PASS: TestWriteFileInvalidJSON (0.00s)
+=== RUN   TestWriteFileMissingRequiredFields
+--- PASS: TestWriteFileMissingRequiredFields (0.00s)
+=== RUN   TestWriteFileEmptyContent
+--- PASS: TestWriteFileEmptyContent (0.00s)
+=== RUN   TestWriteFileWithSpecialCharacters
+--- PASS: TestWriteFileWithSpecialCharacters (0.00s)
+=== RUN   TestWriteFileLargeContent
+--- PASS: TestWriteFileLargeContent (0.00s)
+=== RUN   TestWriteFileWithBackslashes
+--- PASS: TestWriteFileWithBackslashes (0.00s)
+=== RUN   TestWriteFileWithJSONContent
+--- PASS: TestWriteFileWithJSONContent (0.00s)
+=== RUN   TestWriteFileDeeplyNestedDirectories
+--- PASS: TestWriteFileDeeplyNestedDirectories (0.00s)
+=== RUN   TestWriteFileWithMultilineContent
+--- PASS: TestWriteFileWithMultilineContent (0.00s)
+=== RUN   TestWriteFileRootDirectory
+--- PASS: TestWriteFileRootDirectory (0.00s)
+PASS
+ok  	github.com/xi0/coderoom-ai/internal/tools	0.016s

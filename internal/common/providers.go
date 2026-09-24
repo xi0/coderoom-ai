@@ -20,8 +20,8 @@ var (
 			BaseURL:    "https://api.deepseek.com",
 			Models: []Model{
 				Model{
-					Name:    "DeepSeek Coder V2",
-					ModelID: "deepseek-coder-v2",
+					Name:    "DeepSeek Flash",
+					ModelID: "deepseek-flash",
 				},
 			},
 		},

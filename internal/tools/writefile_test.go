@@ -669,3 +669,191 @@ func TestWriteFileRootDirectory(t *testing.T) {
 		t.Errorf("Expected file content %q, got %q", testContent, string(content))
 	}
 }
+
+func TestWriteFileRecordsCreationOfNewFile(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "writefile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := writeFileTool()
+	argsJSON := `{"relative_path": "recorded.txt", "content": "recorded content"}`
+	if _, err := tool.call(argsJSON, options); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	edit, ok := edits.edits["recorded.txt"]
+	if !ok {
+		t.Fatal("Expected write_file to record an edit for recorded.txt")
+	}
+	if !edit.OrigNonExistent {
+		t.Error("Expected OrigNonExistent to be true for a newly created file")
+	}
+	if edit.OrigInfo != nil {
+		t.Error("Expected OrigInfo to be nil for a newly created file")
+	}
+	if len(edit.OrigContent) != 0 {
+		t.Errorf("Expected no original content, got %q", edit.OrigContent)
+	}
+	if len(edit.Changes) != 1 {
+		t.Fatalf("Expected 1 change, got %d", len(edit.Changes))
+	}
+
+	change := edit.Changes[0]
+	if !change.Created {
+		t.Error("Expected change.Created to be true")
+	}
+	if change.Deleted {
+		t.Error("Expected change.Deleted to be false")
+	}
+	if string(change.New) != "recorded content" {
+		t.Errorf("Expected change.New %q, got %q", "recorded content", change.New)
+	}
+}
+
+func TestWriteFileRecordsOverwriteOfExistingFile(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "writefile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	originalContent := "original content"
+	if err := os.WriteFile(tmpDir+"/existing.txt", []byte(originalContent), 0644); err != nil {
+		t.Fatalf("Failed to create existing file: %v", err)
+	}
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := writeFileTool()
+	argsJSON := `{"relative_path": "existing.txt", "content": "overwritten content"}`
+	if _, err := tool.call(argsJSON, options); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	edit, ok := edits.edits["existing.txt"]
+	if !ok {
+		t.Fatal("Expected write_file to record an edit for existing.txt")
+	}
+	if edit.OrigNonExistent {
+		t.Error("Expected OrigNonExistent to be false for an existing file")
+	}
+	if edit.OrigInfo == nil {
+		t.Fatal("Expected OrigInfo to be recorded for an existing file")
+	}
+	if edit.OrigInfo.Size() != int64(len(originalContent)) {
+		t.Errorf("Expected OrigInfo.Size() %d, got %d", len(originalContent), edit.OrigInfo.Size())
+	}
+	if string(edit.OrigContent) != originalContent {
+		t.Errorf("Expected OrigContent %q, got %q", originalContent, edit.OrigContent)
+	}
+	if len(edit.Changes) != 1 {
+		t.Fatalf("Expected 1 change, got %d", len(edit.Changes))
+	}
+
+	change := edit.Changes[0]
+	if change.Created {
+		t.Error("Expected change.Created to be false for an overwrite")
+	}
+	if string(change.New) != "overwritten content" {
+		t.Errorf("Expected change.New %q, got %q", "overwritten content", change.New)
+	}
+}
+
+func TestWriteFileRecordsMultipleWrites(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "writefile_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	root, err := os.OpenRoot(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to open root: %v", err)
+	}
+	defer root.Close()
+
+	writeChannel := make(chan wire.BackendMessage, 10)
+	defer close(writeChannel)
+
+	edits := NewFileEdits(root)
+	options := &ToolOptions{
+		Modifications: true,
+		Edits:         edits,
+		Root:          root,
+		WriteChannel:  writeChannel,
+	}
+
+	tool := writeFileTool()
+
+	writes := []string{"first", "second", "third"}
+	for _, content := range writes {
+		argsJSON, err := json.Marshal(WriteFileArgs{
+			RelativePath: "multi.txt",
+			Content:      content,
+		})
+		if err != nil {
+			t.Fatalf("json.Marshal(): %v", err)
+		}
+		if _, err := tool.call(string(argsJSON), options); err != nil {
+			t.Fatalf("Expected no error writing %q, got: %v", content, err)
+		}
+	}
+
+	edit, ok := edits.edits["multi.txt"]
+	if !ok {
+		t.Fatal("Expected write_file to record an edit for multi.txt")
+	}
+	// The original state is registered before the first write and must not be
+	// overwritten by later writes.
+	if !edit.OrigNonExistent {
+		t.Error("Expected OrigNonExistent to be true for a file that did not exist")
+	}
+	if len(edit.Changes) != len(writes) {
+		t.Fatalf("Expected %d changes, got %d", len(writes), len(edit.Changes))
+	}
+	if !edit.Changes[0].Created {
+		t.Error("Expected the first write to be marked as created")
+	}
+	if edit.Changes[1].Created || edit.Changes[2].Created {
+		t.Error("Expected subsequent writes not to be marked as created")
+	}
+	for i, want := range writes {
+		if string(edit.Changes[i].New) != want {
+			t.Errorf("Change %d: expected New %q, got %q", i, want, edit.Changes[i].New)
+		}
+	}
+}

@@ -60,15 +60,28 @@ func editFileTool() *Tool {
 				return "", fmt.Errorf("failed to read file %q: %w", args.RelativePath, err)
 			}
 
-			if bytes.Index(content, []byte(args.OldString)) == -1 {
+			oldString := []byte(args.OldString)
+			newString := []byte(args.NewString)
+
+			if bytes.Index(content, oldString) == -1 {
 				return "", fmt.Errorf("the content in old_string is not found in the file")
 			}
 
-			content = bytes.Replace(content, []byte(args.OldString), []byte(args.NewString), 1)
+			content = bytes.Replace(content, oldString, newString, 1)
 
-			err = options.Root.WriteFile(args.RelativePath, []byte(content), 0644)
+			// Capture the original state of the file before it is modified so
+			// that the recorded edit references the pre-edit contents.
+			if options.Edits != nil {
+				options.Edits.registerFile(args.RelativePath)
+			}
+
+			err = options.Root.WriteFile(args.RelativePath, content, 0644)
 			if err != nil {
 				return "", fmt.Errorf("failed to write file: %w", err)
+			}
+
+			if options.Edits != nil {
+				options.Edits.EditFile(args.RelativePath, oldString, newString)
 			}
 
 			return fmt.Sprintf("File edited successfully:\n%s", args.RelativePath), nil

@@ -161,13 +161,15 @@ func (be *OpenAI) client() (*openai.Client, *wire.ProviderSettings) {
 
 func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan promptData, optionChannel chan int, confirmationChannel chan bool) {
 	ctx := context.Background()
-	toolsList := tools.BuildToolsList()
+	toolsList := tools.BuildToolsList(be.Settings.GetBuildProjectTool(), be.Settings.GetRunTestsTool())
 
 	root, err := os.OpenRoot(be.Settings.ProjectDir)
 	if err != nil {
 		log.Fatalf("Failed to open root: %v", err)
 	}
 	defer root.Close()
+
+	edits := tools.NewFileEdits(root)
 
 	messages := []openai.ChatCompletionMessage{
 		{
@@ -177,14 +179,14 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 	}
 
 	for prompt := range promptChannel {
-		for {
-			messages = append(messages,
-				openai.ChatCompletionMessage{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt.prompt,
-				},
-			)
+		messages = append(messages,
+			openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleUser,
+				Content: prompt.prompt,
+			},
+		)
 
+		for {
 			client, provider := be.client()
 
 			req := openai.ChatCompletionRequest{
@@ -195,7 +197,13 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 
 			resp, err := client.CreateChatCompletion(ctx, req)
 			if err != nil {
-				log.Fatalf("API call failed: %v", err)
+				errorMessage := fmt.Sprintf("API call failed: %v", err)
+				writeChannel <- wire.BackendMessage{
+					SystemMessage: &errorMessage,
+					WorkDone:      true,
+					EnablePrompt:  true,
+				}
+				break
 			}
 
 			msg := resp.Choices[0].Message
@@ -213,6 +221,7 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 				// Handle tool execution requests from the model
 				toolOptions := &tools.ToolOptions{
 					Modifications:       prompt.modifications,
+					Edits:               edits,
 					Root:                root,
 					WriteChannel:        writeChannel,
 					OptionChannel:       optionChannel,

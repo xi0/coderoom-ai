@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/xi0/coderoom-ai/internal/blockingfiles"
 	"github.com/xi0/coderoom-ai/internal/wire"
 )
 
@@ -47,6 +49,8 @@ func (s *Settings) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.serveTheme(w, r)
 	case "/settings/project":
 		s.serveProject(w, r)
+	case "/settings/project/blocking-files":
+		s.serveBlockingFiles(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -263,6 +267,40 @@ func (s *Settings) GetDefaultProvider() *wire.ProviderSettings {
 	return nil
 }
 
+func (s *Settings) GetBuildProjectTool() *wire.ToolSettings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.project == nil {
+		return nil
+	}
+
+	if s.project.BuildProjectTool == nil {
+		return nil
+	}
+
+	// Make a copy of the tool object that can be used when the mutex is not held.
+	tool := *s.project.BuildProjectTool
+	return &tool
+}
+
+func (s *Settings) GetRunTestsTool() *wire.ToolSettings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.project == nil {
+		return nil
+	}
+
+	if s.project.RunTestsTool == nil {
+		return nil
+	}
+
+	// Make a copy of the tool object that can be used when the mutex is not held.
+	tool := *s.project.RunTestsTool
+	return &tool
+}
+
 func (s *Settings) serveProject(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -347,4 +385,74 @@ func (s *Settings) saveProject() error {
 	}
 
 	return nil
+}
+
+func (s *Settings) serveBlockingFiles(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	var request wire.BlockingFilesRequest
+	if err := json.Unmarshal(data, &request); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	var response wire.BlockingFilesResponse
+
+	files, err := s.matchingFiles(request.Pattern)
+	if err != nil {
+		response.Error = err.Error()
+	} else {
+		response.Files = files
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("json.NewEncoder().Encode(): %v", err)
+	}
+}
+
+// matchingFiles returns the paths of all regular files under the project
+// directory that match the given pattern. The returned paths are relative to
+// the project root and use "/" as separator. The .git directory is skipped.
+func (s *Settings) matchingFiles(pattern string) ([]string, error) {
+	root := s.ProjectDir
+	matches := []string{}
+
+	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			if d.Name() == ".git" {
+				return fs.SkipDir
+			}
+			return nil
+		}
+
+		rel, err := filepath.Rel(root, p)
+		if err != nil {
+			return err
+		}
+
+		if blockingfiles.MatchBlockingFile(pattern, rel) {
+			matches = append(matches, filepath.ToSlash(rel))
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return matches, nil
 }
