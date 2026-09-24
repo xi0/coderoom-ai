@@ -54,6 +54,7 @@ func presentOptionsTool() *Tool {
 					Description: args.Prompt,
 					Options:     args.Options,
 				},
+				WorkDone: true,
 			}
 
 			selection := <-options.OptionChannel
