@@ -55,7 +55,7 @@ func grepTool() *Tool {
 
 			toolString := fmt.Sprintf("grep(%q)", args.Pattern)
 			options.WriteChannel <- wire.BackendMessage{
-				ToolMessage: &toolString,
+				ToolMessage: &wire.ToolMessage{Tool: toolString},
 			}
 
 			if args.Pattern == "" {

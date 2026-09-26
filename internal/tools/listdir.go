@@ -46,7 +46,7 @@ func listDirTool() *Tool {
 
 			toolString := fmt.Sprintf("list_dir(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
-				ToolMessage: &toolString,
+				ToolMessage: &wire.ToolMessage{Tool: toolString},
 			}
 
 			dir, err := options.Root.Open(args.RelativePath)

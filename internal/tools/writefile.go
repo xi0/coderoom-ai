@@ -49,7 +49,7 @@ func writeFileTool() *Tool {
 
 			toolString := fmt.Sprintf("write_file(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
-				ToolMessage: &toolString,
+				ToolMessage: &wire.ToolMessage{Tool: toolString},
 			}
 
 			// Ensure target directory exists before writing

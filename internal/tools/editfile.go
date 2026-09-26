@@ -51,8 +51,12 @@ func editFileTool() *Tool {
 			}
 
 			toolString := fmt.Sprintf("edit_file(%q)", args.RelativePath)
+			multipleFmt := "%d edits"
 			options.WriteChannel <- wire.BackendMessage{
-				ToolMessage: &toolString,
+				ToolMessage: &wire.ToolMessage{
+					Tool:        toolString,
+					MultipleFmt: &multipleFmt,
+				},
 			}
 
 			content, err := options.Root.ReadFile(args.RelativePath)

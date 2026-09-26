@@ -29,7 +29,7 @@ func commandTool(name, description string, tool *wire.ToolSettings) *Tool {
 		handler: func(argsJSON string, options *ToolOptions) (string, error) {
 			toolString := fmt.Sprintf("%s()", name)
 			options.WriteChannel <- wire.BackendMessage{
-				ToolMessage: &toolString,
+				ToolMessage: &wire.ToolMessage{Tool: toolString},
 			}
 
 			blockingFiles := blockingfiles.BlockingFilesInList(tool.BlockingFiles, options.Edits.Filenames())

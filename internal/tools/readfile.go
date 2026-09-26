@@ -41,7 +41,7 @@ func readFileTool() *Tool {
 
 			toolString := fmt.Sprintf("read_file(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
-				ToolMessage: &toolString,
+				ToolMessage: &wire.ToolMessage{Tool: toolString},
 			}
 
 			content, err := options.Root.ReadFile(args.RelativePath)

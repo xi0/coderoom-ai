@@ -18,7 +18,7 @@ type BackendMessage struct {
 	Pong            *PingMessage     `json:"pong,omitempty"`
 	AllowDirMessage *string          `json:"allow_dir,omitempty"`
 	SystemMessage   *string          `json:"system_message,omitempty"`
-	ToolMessage     *string          `json:"tool_message,omitempty"`
+	ToolMessage     *ToolMessage     `json:"tool_message,omitempty"`
 	ProposalMessage *string          `json:"proposal_message,omitempty"`
 	OptionsMessage  *OptionsMessage  `json:"options_message,omitempty"`
 	BlockedMessage  *BlockedMessage  `json:"blocked_message,omitempty"`
@@ -32,6 +32,11 @@ type InitMessage struct {
 	DarkTheme     bool   `json:"dark_theme"`
 	ProjectName   string `json:"project_name"`
 	ProjectDir    string `json:"project_dir"`
+}
+
+type ToolMessage struct {
+	Tool        string  `json:"tool"`
+	MultipleFmt *string `json:"multiple_fmt,omitempty"`
 }
 
 type OptionsMessage struct {

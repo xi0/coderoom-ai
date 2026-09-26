@@ -62,7 +62,7 @@ func TestPresentOptionsValidSelection(t *testing.T) {
 			}
 		}
 		if msg.ToolMessage != nil {
-			t.Errorf("Expected ToolMessage to be nil, got %q", *msg.ToolMessage)
+			t.Errorf("Expected ToolMessage to be nil, got %v", msg.ToolMessage)
 		}
 	default:
 		t.Error("Expected an options message to be sent to writeChannel")

@@ -68,8 +68,8 @@ func TestCommandToolSendsToolMessage(t *testing.T) {
 		if msg.ToolMessage == nil {
 			t.Fatal("Expected ToolMessage to be set")
 		}
-		if *msg.ToolMessage != "run_tests()" {
-			t.Errorf("Expected tool message %q, got %q", "run_tests()", *msg.ToolMessage)
+		if msg.ToolMessage.Tool != "run_tests()" {
+			t.Errorf("Expected tool message %q, got %q", "run_tests()", msg.ToolMessage.Tool)
 		}
 	default:
 		t.Error("Expected a message to be sent to writeChannel")
@@ -311,8 +311,8 @@ func requireToolMessage(t *testing.T, writeChannel chan wire.BackendMessage, wan
 		if msg.ToolMessage == nil {
 			t.Fatalf("Expected ToolMessage to be set, got %+v", msg)
 		}
-		if *msg.ToolMessage != want {
-			t.Errorf("Expected tool message %q, got %q", want, *msg.ToolMessage)
+		if msg.ToolMessage.Tool != want {
+			t.Errorf("Expected tool message %q, got %q", want, msg.ToolMessage.Tool)
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("Timed out waiting for the tool message")

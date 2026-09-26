@@ -284,6 +284,19 @@ html, body {
   font-family: monospace;
 }
 
+.tool-count-pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background-color: var(--accent-color);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
 /* Plan Proposal Message Styling */
 .plan-message .message-content {
   display: flex;
