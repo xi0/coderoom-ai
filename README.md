@@ -19,6 +19,10 @@ Most of the other design considerations are centered around security.
 * Provide easy rollback mechanisms.
 * Use the Go built-in os.Root type for restricting all file operations to within the project directory.
 
+Additionally, we will strive to keep the number of external dependencies as low as possible.
+
+The tool consists of a single binary containing everything needed to run and serve its web inteface in the local browser.
+
 ## Project Structure
 
 ```
