@@ -1,5 +1,5 @@
 # Coderoom AI
-A simple AI code assistant with a web based UI.
+A simple but powerful AI code assistant with a web based UI.
 
 ## About Coderoom AI
 Coderoom AI is a simple AI code assistant that provides intelligent code suggestions and assistance through a user-friendly web-based interface.
