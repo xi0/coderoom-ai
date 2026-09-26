@@ -53,7 +53,7 @@ func TestProposePlanConfirmed(t *testing.T) {
 			t.Errorf("Expected proposal %q, got %q", plan, *msg.ProposalMessage)
 		}
 		if msg.ToolMessage != nil {
-			t.Errorf("Expected ToolMessage to be nil, got %q", *msg.ToolMessage)
+			t.Errorf("Expected ToolMessage to be nil, got %v", msg.ToolMessage)
 		}
 	default:
 		t.Error("Expected a proposal message to be sent to writeChannel")

@@ -75,8 +75,8 @@ func TestGrepValidPatternWithMatches(t *testing.T) {
 			t.Error("Expected ToolMessage to be set")
 		} else {
 			expectedMsg := `grep("pattern")`
-			if *msg.ToolMessage != expectedMsg {
-				t.Errorf("Expected tool message %q, got %q", expectedMsg, *msg.ToolMessage)
+			if msg.ToolMessage.Tool != expectedMsg {
+				t.Errorf("Expected tool message %q, got %q", expectedMsg, msg.ToolMessage.Tool)
 			}
 		}
 	default:

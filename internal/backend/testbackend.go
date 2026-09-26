@@ -122,7 +122,7 @@ func toolMessage(writeChannel chan wire.BackendMessage) {
 	toolMessage := "read_file(\"README.md\")"
 
 	writeChannel <- wire.BackendMessage{
-		ToolMessage:  &toolMessage,
+		ToolMessage:  &wire.ToolMessage{Tool: toolMessage},
 		WorkDone:     true,
 		EnablePrompt: true,
 	}
@@ -268,7 +268,7 @@ func blockedConfirmation(writeChannel chan wire.BackendMessage, confirmation boo
 	toolMessage := "build_project()"
 
 	writeChannel <- wire.BackendMessage{
-		ToolMessage: &toolMessage,
+		ToolMessage: &wire.ToolMessage{Tool: toolMessage},
 	}
 
 	time.Sleep(2 * time.Second)

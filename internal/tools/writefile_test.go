@@ -57,8 +57,8 @@ func TestWriteFileCreateNewFile(t *testing.T) {
 			t.Error("Expected ToolMessage to be set")
 		} else {
 			expectedToolMsg := `write_file("newfile.txt")`
-			if *msg.ToolMessage != expectedToolMsg {
-				t.Errorf("Expected tool message %q, got %q", expectedToolMsg, *msg.ToolMessage)
+			if msg.ToolMessage.Tool != expectedToolMsg {
+				t.Errorf("Expected tool message %q, got %q", expectedToolMsg, msg.ToolMessage.Tool)
 			}
 		}
 	default:

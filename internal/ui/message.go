@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	b "github.com/xi0/coderoom-ai/internal/browser"
+	"github.com/xi0/coderoom-ai/internal/wire"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
@@ -29,12 +30,25 @@ func renderMarkdown(md string) string {
 	return string(markdown.Render(doc, renderer))
 }
 
+// lastMessage holds the most recently added message. It is used to collapse
+// consecutive identical tool messages into a single message that carries a
+// counter pill.
+var lastMessage *b.Object
+
 func addMessage(m *b.Object) {
+	// A nil message means that the caller decided not to add a new message
+	// (e.g. a repeated tool call that was merged into the previous message).
+	if m == nil {
+		return
+	}
+
 	doc := b.Document()
 	workingMessage := doc.GetElementByID("working-message")
 	parent := workingMessage.Parent()
 
 	parent.InsertBefore(m, workingMessage)
+
+	lastMessage = m
 
 	workingMessage.ScrollIntoView()
 }
@@ -133,9 +147,20 @@ func userMessage(markdown string) *b.Object {
 	)
 }
 
-func toolMessage(tool string) *b.Object {
+func toolMessage(message *wire.ToolMessage) *b.Object {
+	// When a tool message provides a MultipleFmt, consecutive calls to the same
+	// tool are collapsed into the previous message by showing a counter pill
+	// instead of adding a new message.
+	if message.MultipleFmt != nil &&
+		lastMessage != nil &&
+		lastMessage.ContainsClass("tool-message") &&
+		toolMessageString(lastMessage) == message.Tool {
+		addToolMessageCount(lastMessage, *message.MultipleFmt)
+		return nil
+	}
+
 	return b.Div(
-		[]string{"message", "system-message"},
+		[]string{"message", "system-message", "tool-message"},
 		b.Div(
 			[]string{"message-content"},
 			b.Span(
@@ -147,12 +172,53 @@ func toolMessage(tool string) *b.Object {
 				b.Text("Tool: "),
 				b.Span(
 					[]string{"function-call"},
-					b.Text(tool),
+					b.Text(message.Tool),
 				),
 			),
 		),
 	)
 
+}
+
+// toolMessageString returns the tool string displayed in a tool message.
+func toolMessageString(message *b.Object) string {
+	functionCalls := message.GetElementsByClassName("function-call")
+	if len(functionCalls) == 0 {
+		return ""
+	}
+
+	return functionCalls[0].GetTextContent()
+}
+
+// addToolMessageCount shows or increments the counter pill in a tool message.
+// The format string is expected to contain a single %d placeholder which is
+// replaced with the number of collapsed tool calls.
+func addToolMessageCount(message *b.Object, format string) {
+	pills := message.GetElementsByClassName("tool-count-pill")
+
+	var pill *b.Object
+	count := 2
+	if len(pills) > 0 {
+		pill = pills[0]
+
+		count = 1
+		if parsed, err := strconv.Atoi(pill.GetAttribute("data-count")); err == nil {
+			count = parsed
+		}
+		count++
+	} else {
+		pill = b.Span([]string{"tool-count-pill"})
+
+		texts := message.GetElementsByClassName("message-text")
+		if len(texts) > 0 {
+			texts[0].Append(pill)
+		} else {
+			message.GetElementsByClassName("message-content")[0].Append(pill)
+		}
+	}
+
+	pill.SetAttribute("data-count", strconv.Itoa(count))
+	pill.TextContent(fmt.Sprintf(format, count))
 }
 
 func proposalMessage(markdown string, confirm func(bool)) *b.Object {

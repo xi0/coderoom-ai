@@ -41,7 +41,7 @@ func deleteFileTool() *Tool {
 
 			toolString := fmt.Sprintf("delete_file(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
-				ToolMessage: &toolString,
+				ToolMessage: &wire.ToolMessage{Tool: toolString},
 			}
 
 			// Capture the original state of the file before it is deleted so

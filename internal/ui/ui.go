@@ -826,8 +826,8 @@ func handleSystemMessage(markdown string) {
 	addMessage(systemMessage(markdown))
 }
 
-func handleToolMessage(text string) {
-	addMessage(toolMessage(text))
+func handleToolMessage(message *wire.ToolMessage) {
+	addMessage(toolMessage(message))
 }
 
 func handleProposalMessage(markdown string) {
