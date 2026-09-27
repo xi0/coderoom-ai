@@ -194,6 +194,22 @@ func confirmation(writeChannel chan wire.BackendMessage, confirmation bool) {
 
 	time.Sleep(2 * time.Second)
 
+	for i := 0; i < 3; i++ {
+		toolMessage := "edit_file(\"src/core.go\")"
+		multipleFmt := "%d edits"
+
+		writeChannel <- wire.BackendMessage{
+			ToolMessage: &wire.ToolMessage{
+				Tool:        toolMessage,
+				MultipleFmt: &multipleFmt,
+			},
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+
+	time.Sleep(2 * time.Second)
+
 	writeChannel <- wire.BackendMessage{
 		UpdateProgress: &wire.ProgressMessage{
 			Percent: 80,
@@ -202,6 +218,20 @@ func confirmation(writeChannel chan wire.BackendMessage, confirmation bool) {
 	}
 
 	time.Sleep(2 * time.Second)
+
+	for i := 0; i < 2; i++ {
+		toolMessage := "edit_file(\"src/core_test.go\")"
+		multipleFmt := "%d edits"
+
+		writeChannel <- wire.BackendMessage{
+			ToolMessage: &wire.ToolMessage{
+				Tool:        toolMessage,
+				MultipleFmt: &multipleFmt,
+			},
+		}
+
+		time.Sleep(2 * time.Second)
+	}
 
 	systemMessage := `I have succesfully completed the outlined steps. 🎉`
 
