@@ -30,9 +30,9 @@ const (
 	StateChat     = 2
 
 	systemPrompt = `You are a helpful software engineering code assistant. Explore and modify the project using available tools to fulfill requests.
-If a change touches more than 10 lines or more than one file, propose the plan to the user and get confirmation before proceeding.
-If more than one solution makes sense then ask the user for the desired option.
-Report progress every 5-10 seconds if possible.`
+If a change touches more than 10 lines or more than one file, propose the plan to the user and get confirmation before proceeding, using the "propose_plan" tool.
+If more than one solution makes sense then ask the user for the desired option, using the "present_options" tool.
+Report progress every 5-10 seconds if possible, using the "report_progress" tool.`
 )
 
 func (be *OpenAI) Run(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage) {
