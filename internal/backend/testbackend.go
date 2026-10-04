@@ -57,6 +57,7 @@ You can use the following keywords to test different message types in the UI.
 			DarkTheme:     be.Settings.GetDarkTheme(),
 			ProjectName:   be.Settings.GetProjectName(),
 			ProjectDir:    be.Settings.ProjectDir,
+			Providers:     be.Settings.GetProviders(),
 		},
 		SystemMessage: &systemMessage,
 		WorkDone:      true,
@@ -68,18 +69,18 @@ You can use the following keywords to test different message types in the UI.
 
 func handleMessage(message wire.FrontendMessage, writeChannel chan wire.BackendMessage) {
 	if message.Prompt != nil {
-		log.Printf("Prompt: %q\n", *message.Prompt)
+		log.Printf("Prompt: %q\n", message.Prompt.Prompt)
 
-		if strings.Contains(*message.Prompt, "system") {
+		if strings.Contains(message.Prompt.Prompt, "system") {
 			go systemMessage(writeChannel)
-		} else if strings.Contains(*message.Prompt, "tool") {
+		} else if strings.Contains(message.Prompt.Prompt, "tool") {
 			go toolMessage(writeChannel)
-		} else if strings.Contains(*message.Prompt, "proposal") {
+		} else if strings.Contains(message.Prompt.Prompt, "proposal") {
 			confirmationFunc = confirmation
 			go proposalMessage(writeChannel)
-		} else if strings.Contains(*message.Prompt, "options") {
+		} else if strings.Contains(message.Prompt.Prompt, "options") {
 			go optionsMessage(writeChannel)
-		} else if strings.Contains(*message.Prompt, "blocked") {
+		} else if strings.Contains(message.Prompt.Prompt, "blocked") {
 			confirmationFunc = blockedConfirmation
 			go blockedMessage(writeChannel)
 		} else {

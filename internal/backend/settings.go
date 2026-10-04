@@ -267,6 +267,40 @@ func (s *Settings) GetDefaultProvider() *wire.ProviderSettings {
 	return nil
 }
 
+func (s *Settings) GetProvider(providerID, modelID string) *wire.ProviderSettings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return nil
+	}
+
+	for _, p := range s.global.Providers {
+		if p.ProviderID == providerID && p.ModelID == modelID {
+			return &p
+		}
+	}
+
+	return nil
+}
+
+func (s *Settings) GetProviders() []wire.ProviderSettings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return nil
+	}
+
+	providers := make([]wire.ProviderSettings, len(s.global.Providers))
+	for i, p := range s.global.Providers {
+		p.APIKey = ""
+		providers[i] = p
+	}
+
+	return providers
+}
+
 func (s *Settings) GetBuildProjectTool() *wire.ToolSettings {
 	s.mu.Lock()
 	defer s.mu.Unlock()
