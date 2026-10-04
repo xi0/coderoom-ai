@@ -19,11 +19,6 @@ type OpenAI struct {
 	Settings *Settings
 }
 
-type promptData struct {
-	modifications bool
-	prompt        string
-}
-
 const (
 	StateInit     = 0
 	StateAllowDir = 1
