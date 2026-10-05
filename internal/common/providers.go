@@ -12,6 +12,12 @@ type Model struct {
 	ModelID string
 }
 
+type ProviderModel struct {
+	ProviderName string
+	ModelName    string
+	BaseURL      string
+}
+
 var (
 	Providers = []*Provider{
 		&Provider{
@@ -85,4 +91,23 @@ var (
 			},
 		},
 	}
+	ProvidersMap map[string]map[string]*ProviderModel
 )
+
+func init() {
+	ProvidersMap = make(map[string]map[string]*ProviderModel)
+
+	for _, p := range Providers {
+		for _, m := range p.Models {
+			if _, ok := ProvidersMap[p.ProviderID]; !ok {
+				ProvidersMap[p.ProviderID] = make(map[string]*ProviderModel)
+			}
+
+			ProvidersMap[p.ProviderID][m.ModelID] = &ProviderModel{
+				ProviderName: p.Name,
+				ModelName:    m.Name,
+				BaseURL:      p.BaseURL,
+			}
+		}
+	}
+}

@@ -3,12 +3,18 @@ package wire
 // Messages from the frontend
 
 type FrontendMessage struct {
-	Modifications bool         `json:"modifications"`
-	Ping          *PingMessage `json:"ping,omitempty"`
-	AllowDir      *bool        `json:"allow_dir,omitempty"`
-	Prompt        *string      `json:"prompt,omitempty"`
-	ChosenOption  *int         `json:"chosen_option,omitempty"`
-	Confirmation  *bool        `json:"confirmation,omitempty"`
+	Ping         *PingMessage   `json:"ping,omitempty"`
+	AllowDir     *bool          `json:"allow_dir,omitempty"`
+	Prompt       *PromptMessage `json:"prompt,omitempty"`
+	ChosenOption *int           `json:"chosen_option,omitempty"`
+	Confirmation *bool          `json:"confirmation,omitempty"`
+}
+
+type PromptMessage struct {
+	Modifications bool   `json:"modifications"`
+	Prompt        string `json:"prompt"`
+	ProviderID    string `json:"provider_id,omitempty"`
+	ModelID       string `json:"model_id,omitempty"`
 }
 
 // Messages from the backend
@@ -28,10 +34,11 @@ type BackendMessage struct {
 }
 
 type InitMessage struct {
-	Modifications bool   `json:"modifications"`
-	DarkTheme     bool   `json:"dark_theme"`
-	ProjectName   string `json:"project_name"`
-	ProjectDir    string `json:"project_dir"`
+	Modifications bool               `json:"modifications"`
+	DarkTheme     bool               `json:"dark_theme"`
+	ProjectName   string             `json:"project_name"`
+	ProjectDir    string             `json:"project_dir"`
+	Providers     []ProviderSettings `json:"providers"`
 }
 
 type ToolMessage struct {
@@ -75,7 +82,7 @@ type GlobalSettings struct {
 type ProviderSettings struct {
 	ProviderID string `json:"provider_id"`
 	ModelID    string `json:"model_id"`
-	APIKey     string `json:"api_key"`
+	APIKey     string `json:"api_key,omitempty"`
 	Default    bool   `json:"default"`
 }
 

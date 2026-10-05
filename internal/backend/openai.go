@@ -19,11 +19,6 @@ type OpenAI struct {
 	Settings *Settings
 }
 
-type promptData struct {
-	modifications bool
-	prompt        string
-}
-
 const (
 	StateInit     = 0
 	StateAllowDir = 1
@@ -65,6 +60,7 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 			DarkTheme:     be.Settings.GetDarkTheme(),
 			ProjectName:   be.Settings.GetProjectName(),
 			ProjectDir:    be.Settings.ProjectDir,
+			Providers:     be.Settings.GetProviders(),
 		},
 	}
 
@@ -80,7 +76,7 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 		}
 	}
 
-	promptChannel := make(chan promptData)
+	promptChannel := make(chan wire.PromptMessage)
 	optionChannel := make(chan int)
 	confirmationChannel := make(chan bool)
 	go be.agentLoop(writeChannel, promptChannel, optionChannel, confirmationChannel)
@@ -112,10 +108,7 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 			}
 		case StateChat:
 			if message.Prompt != nil {
-				promptChannel <- promptData{
-					modifications: message.Modifications,
-					prompt:        *message.Prompt,
-				}
+				promptChannel <- *message.Prompt
 			}
 			if message.ChosenOption != nil {
 				optionChannel <- *message.ChosenOption
@@ -137,29 +130,20 @@ func (be *OpenAI) sendGreeting(writeChannel chan wire.BackendMessage) {
 	}
 }
 
-func (be *OpenAI) client() (*openai.Client, *wire.ProviderSettings) {
-	provider := be.Settings.GetDefaultProvider()
-	baseURL := ""
-	for _, p := range common.Providers {
-		if p.ProviderID == provider.ProviderID {
-			for _, m := range p.Models {
-				if m.ModelID == provider.ModelID {
-					baseURL = p.BaseURL
-				}
-			}
-		}
+func (be *OpenAI) client(providerID, modelID string) (*openai.Client, *wire.ProviderSettings) {
+	provider := be.Settings.GetProvider(providerID, modelID)
+	if provider == nil {
+		provider = be.Settings.GetDefaultProvider()
 	}
 
-	if baseURL == "" {
-		return nil, nil
-	}
+	p := common.ProvidersMap[provider.ProviderID][provider.ModelID]
 
 	config := openai.DefaultConfig(provider.APIKey)
-	config.BaseURL = baseURL
+	config.BaseURL = p.BaseURL
 	return openai.NewClientWithConfig(config), provider
 }
 
-func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan promptData, optionChannel chan int, confirmationChannel chan bool) {
+func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan wire.PromptMessage, optionChannel chan int, confirmationChannel chan bool) {
 	ctx := context.Background()
 	toolsList := tools.BuildToolsList(be.Settings.GetBuildProjectTool(), be.Settings.GetRunTestsTool())
 
@@ -182,17 +166,17 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 		messages = append(messages,
 			openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleUser,
-				Content: prompt.prompt,
+				Content: prompt.Prompt,
 			},
 		)
 
 		for {
-			client, provider := be.client()
+			client, provider := be.client(prompt.ProviderID, prompt.ModelID)
 
 			req := openai.ChatCompletionRequest{
 				Model:    provider.ModelID,
 				Messages: messages,
-				Tools:    toolsList.Get(prompt.modifications),
+				Tools:    toolsList.Get(prompt.Modifications),
 			}
 
 			resp, err := client.CreateChatCompletion(ctx, req)
@@ -220,7 +204,7 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 			} else {
 				// Handle tool execution requests from the model
 				toolOptions := &tools.ToolOptions{
-					Modifications:       prompt.modifications,
+					Modifications:       prompt.Modifications,
 					Edits:               edits,
 					Root:                root,
 					WriteChannel:        writeChannel,

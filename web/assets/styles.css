@@ -109,6 +109,23 @@ html, body {
   color: var(--text-primary);
 }
 
+#provider-model-select {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  max-width: 220px;
+}
+
+#provider-model-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
 /* Theme Icon Visibility */
 [data-theme="dark"] .sun-icon { display: block; }
 [data-theme="dark"] .moon-icon { display: none; }

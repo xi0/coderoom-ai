@@ -18,9 +18,10 @@ import (
 )
 
 var (
-	webSocket          *browser.WebSocket
-	onlyWhiteSpace     = regexp.MustCompile("^\\s*$")
-	providerModelMatch = regexp.MustCompile("^([0-9]+)/([0-9]+)$")
+	webSocket            *browser.WebSocket
+	onlyWhiteSpace       = regexp.MustCompile("^\\s*$")
+	providerModelMatch   = regexp.MustCompile("^([0-9]+)/([0-9]+)$")
+	providerModelIDMatch = regexp.MustCompile("^([^/]+)/([^/]+)$")
 )
 
 func butterbar(message string, isSuccess bool) {
@@ -347,6 +348,7 @@ func saveGlobalSettings(this, e *browser.Object) any {
 		if resp.StatusCode == http.StatusOK {
 			butterbar("Global settings saved", true)
 			dialog.Close()
+			populateProviderModelSelect(&providers)
 		} else {
 			butterbar("Global settings NOT saved", false)
 		}
@@ -735,9 +737,21 @@ func submitPrompt(this, e *browser.Object) any {
 		modifications = true
 	}
 
+	var providerID, modelID string
+	dropdown := doc.GetElementByID("provider-model-select")
+	m := providerModelIDMatch.FindStringSubmatch(dropdown.GetValue())
+	if m != nil {
+		providerID = m[1]
+		modelID = m[2]
+	}
+
 	message := wire.FrontendMessage{
-		Modifications: modifications,
-		Prompt:        &text,
+		Prompt: &wire.PromptMessage{
+			Modifications: modifications,
+			Prompt:        text,
+			ProviderID:    providerID,
+			ModelID:       modelID,
+		},
 	}
 
 	err := webSocket.Send(message)
@@ -810,6 +824,29 @@ func handleInit(message *wire.InitMessage) {
 
 	dir := doc.GetElementByID("project-dir")
 	dir.TextContent(message.ProjectDir)
+
+	populateProviderModelSelect(&message.Providers)
+}
+
+func populateProviderModelSelect(providers *[]wire.ProviderSettings) {
+	doc := browser.Document()
+	dropdown := doc.GetElementByID("provider-model-select")
+	dropdown.RemoveChildren()
+
+	if len(*providers) == 0 {
+		dropdown.Append(browser.Option("", "No providers configured ()", true))
+		return
+	}
+
+	for _, p := range *providers {
+		pm := common.ProvidersMap[p.ProviderID][p.ModelID]
+
+		dropdown.Append(browser.Option(
+			fmt.Sprintf("%s/%s", p.ProviderID, p.ModelID),
+			fmt.Sprintf("%s / %s", pm.ProviderName, pm.ModelName),
+			p.Default,
+		))
+	}
 }
 
 func handleAllowDirMessage(dir string) {
