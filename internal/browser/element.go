@@ -39,6 +39,10 @@ func Span(classes []string, children ...*Object) *Object {
 	return element("span", classes, children)
 }
 
+func Br() *Object {
+	return element("br", nil, nil)
+}
+
 func H3(children ...*Object) *Object {
 	return element("h3", nil, children)
 }

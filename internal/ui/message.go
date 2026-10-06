@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	b "github.com/xi0/coderoom-ai/internal/browser"
 	"github.com/xi0/coderoom-ai/internal/wire"
@@ -194,25 +195,69 @@ func toolMessage(message *wire.ToolMessage) *b.Object {
 		return nil
 	}
 
+	// For tools without a MultipleFmt, consecutive calls to the same tool
+	// (identified by the text before the first "(") are appended to the
+	// previous message on separate lines instead of creating a new message.
+	if message.MultipleFmt == nil &&
+		lastMessage != nil &&
+		lastMessage.ContainsClass("tool-message-lines") &&
+		toolName(toolMessageString(lastMessage)) == toolName(message.Tool) {
+		addToolMessageLine(lastMessage, message.Tool)
+		return nil
+	}
+
+	toolIcon := b.Span(
+		[]string{"tool-icon"},
+		b.Text("🔧"),
+	)
+
+	functionCall := b.Span(
+		[]string{"function-call"},
+		b.Text(message.Tool),
+	)
+
+	// Tools without a MultipleFmt group repeated calls on separate lines. The
+	// "Tool:" label lives in its own column (see the .tool-message-lines rules
+	// in styles.css) and each call is a sibling of it, so that the calls all
+	// line up with each other rather than each line starting at the left edge.
+	if message.MultipleFmt == nil {
+		return b.Div(
+			[]string{"message", "system-message", "tool-message", "tool-message-lines", verbosityHideMinimal},
+			b.Div(
+				[]string{"message-content"},
+				toolIcon,
+				b.Span(
+					[]string{"message-text"},
+					b.Text("Tool:"),
+				),
+				functionCall,
+			),
+		)
+	}
+
 	return b.Div(
 		[]string{"message", "system-message", "tool-message", verbosityHideMinimal},
 		b.Div(
 			[]string{"message-content"},
-			b.Span(
-				[]string{"tool-icon"},
-				b.Text("🔧"),
-			),
+			toolIcon,
 			b.Span(
 				[]string{"message-text"},
 				b.Text("Tool: "),
-				b.Span(
-					[]string{"function-call"},
-					b.Text(message.Tool),
-				),
+				functionCall,
 			),
 		),
 	)
 
+}
+
+// toolName returns the part of a tool call before the first "(". It is used to
+// group repeated calls to the same tool.
+func toolName(tool string) string {
+	if idx := strings.Index(tool, "("); idx >= 0 {
+		return tool[:idx]
+	}
+
+	return tool
 }
 
 // toolMessageString returns the tool string displayed in a tool message.
@@ -223,6 +268,23 @@ func toolMessageString(message *b.Object) string {
 	}
 
 	return functionCalls[0].GetTextContent()
+}
+
+// addToolMessageLine appends another tool call to an existing tool message,
+// placing it on its own line (each call is a separate grid item; see
+// .tool-message-lines in styles.css).
+func addToolMessageLine(message *b.Object, tool string) {
+	contents := message.GetElementsByClassName("message-content")
+	if len(contents) == 0 {
+		return
+	}
+
+	contents[0].Append(
+		b.Span(
+			[]string{"function-call"},
+			b.Text(tool),
+		),
+	)
 }
 
 // addToolMessageCount shows or increments the counter pill in a tool message.

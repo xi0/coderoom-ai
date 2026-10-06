@@ -196,6 +196,18 @@ func confirmation(writeChannel chan wire.BackendMessage, confirmation bool) {
 
 	time.Sleep(2 * time.Second)
 
+	for _, f := range []string{"src/core.go", "src/foo.go", "src/bar.go"} {
+		toolMessage := fmt.Sprintf("read_file(%q)", f)
+
+		writeChannel <- wire.BackendMessage{
+			ToolMessage: &wire.ToolMessage{
+				Tool: toolMessage,
+			},
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
 	writeChannel <- wire.BackendMessage{
 		UpdateProgress: &wire.ProgressMessage{
 			Percent: 40,
