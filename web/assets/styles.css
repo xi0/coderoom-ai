@@ -394,6 +394,12 @@ html, body {
   margin: 4px 0;
 }
 
+.message-content ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
 .message-content li {
   font-size: 0.9rem;
   color: var(--text-primary);
