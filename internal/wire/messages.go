@@ -20,22 +20,24 @@ type PromptMessage struct {
 // Messages from the backend
 
 type BackendMessage struct {
-	Init            *InitMessage     `json:"init,omitempty"`
-	Pong            *PingMessage     `json:"pong,omitempty"`
-	AllowDirMessage *string          `json:"allow_dir,omitempty"`
-	SystemMessage   *string          `json:"system_message,omitempty"`
-	ToolMessage     *ToolMessage     `json:"tool_message,omitempty"`
-	ProposalMessage *string          `json:"proposal_message,omitempty"`
-	OptionsMessage  *OptionsMessage  `json:"options_message,omitempty"`
-	BlockedMessage  *BlockedMessage  `json:"blocked_message,omitempty"`
-	UpdateProgress  *ProgressMessage `json:"update_progress,omitempty"`
-	WorkDone        bool             `json:"work_done"`
-	EnablePrompt    bool             `json:"enable_prompt"`
+	Init             *InitMessage     `json:"init,omitempty"`
+	Pong             *PingMessage     `json:"pong,omitempty"`
+	AllowDirMessage  *string          `json:"allow_dir,omitempty"`
+	SystemMessage    *string          `json:"system_message,omitempty"`
+	ReasoningMessage *string          `json:"reasoning_message,omitempty"`
+	ToolMessage      *ToolMessage     `json:"tool_message,omitempty"`
+	ProposalMessage  *string          `json:"proposal_message,omitempty"`
+	OptionsMessage   *OptionsMessage  `json:"options_message,omitempty"`
+	BlockedMessage   *BlockedMessage  `json:"blocked_message,omitempty"`
+	UpdateProgress   *ProgressMessage `json:"update_progress,omitempty"`
+	WorkDone         bool             `json:"work_done"`
+	EnablePrompt     bool             `json:"enable_prompt"`
 }
 
 type InitMessage struct {
 	Modifications bool               `json:"modifications"`
 	DarkTheme     bool               `json:"dark_theme"`
+	Verbosity     string             `json:"verbosity"`
 	ProjectName   string             `json:"project_name"`
 	ProjectDir    string             `json:"project_dir"`
 	Providers     []ProviderSettings `json:"providers"`
@@ -70,11 +72,31 @@ type PingMessage struct {
 
 // Settings messages
 
+// Verbosity levels control how much detail is shown in the conversation. The
+// levels are applied to the frontend as CSS class names on the document
+// element and referenced by the "verbosity-hide-*" classes on messages.
+const (
+	VerbosityMinimal = "minimal"
+	VerbosityMedium  = "medium"
+	VerbosityHigh    = "high"
+)
+
+// ValidVerbosity reports whether v is a known verbosity level.
+func ValidVerbosity(v string) bool {
+	switch v {
+	case VerbosityMinimal, VerbosityMedium, VerbosityHigh:
+		return true
+	default:
+		return false
+	}
+}
+
 type GlobalSettings struct {
 	Version              int                `json:"version"`
 	AutoOpen             *string            `json:"auto_open,omitempty"`
 	DefaultModifications bool               `json:"default_modifications"`
 	DarkTheme            bool               `json:"dark_theme"`
+	Verbosity            string             `json:"verbosity"`
 	AllowedDirs          []string           `json:"allowed_dirs"`
 	Providers            []ProviderSettings `json:"providers"`
 }

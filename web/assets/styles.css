@@ -132,6 +132,18 @@ html, body {
 [data-theme="light"] .sun-icon { display: none; }
 [data-theme="light"] .moon-icon { display: block; }
 
+/* Verbosity Level Visibility
+ * The configured verbosity level is applied as a class on the <html> element:
+ *   verbosity-minimal / verbosity-medium / verbosity-high
+ * Messages declare the levels they should be hidden at by carrying the
+ * matching "verbosity-hide-<level>" class. A message without any of these
+ * classes is always visible. */
+.verbosity-minimal .verbosity-hide-minimal,
+.verbosity-medium .verbosity-hide-medium,
+.verbosity-high .verbosity-hide-high {
+  display: none;
+}
+
 /* Mode Toggle Icon Visibility */
 .icon-btn[data-mode="modify"] .modify-icon { display: block; }
 .icon-btn[data-mode="modify"] .inspect-icon { display: none; }
@@ -296,6 +308,42 @@ html, body {
   margin-right: 8px;
 }
 
+/* Tool messages group repeated calls to the same tool on separate lines. The
+ * wrench icon and "Tool:" label form a small gutter, and every call is placed
+ * in a single column so that the calls line up with each other rather than each
+ * line starting at the left edge. */
+.tool-message .message-content {
+  text-align: left;
+}
+
+.tool-message .message-text {
+  min-width: 0;
+}
+
+/* Lay grouped tool calls out on a grid: the icon is in the first column, the
+ * "Tool:" label in the second, and every function call in the third column. */
+.tool-message-lines .message-content {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  column-gap: 8px;
+}
+
+.tool-message-lines .tool-icon {
+  grid-column: 1;
+  grid-row: 1;
+  margin-right: 0;
+}
+
+.tool-message-lines .message-text {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.tool-message-lines .function-call {
+  grid-column: 3;
+}
+
 .function-call {
   color: var(--accent-color);
   font-family: monospace;
@@ -312,6 +360,33 @@ html, body {
   font-weight: 600;
   line-height: 1.5;
   vertical-align: middle;
+}
+
+/* Reasoning Message Styling */
+.reasoning-message .message-content {
+  border-left: 3px solid var(--accent-color);
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.reasoning-message .reasoning-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.reasoning-message .reasoning-icon {
+  font-size: 0.9rem;
+}
+
+.reasoning-message .reasoning-text {
+  font-style: italic;
 }
 
 /* Plan Proposal Message Styling */
@@ -351,6 +426,12 @@ html, body {
 
 .message-content ul {
   list-style-type: disc;
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.message-content ol {
+  list-style-type: decimal;
   padding-left: 20px;
   margin: 4px 0;
 }

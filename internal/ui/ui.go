@@ -112,17 +112,18 @@ func init() {
 func initDone() {
 	webSocket = browser.NewWebSocket(
 		browser.MessageHandlers{
-			Close:           handleClose,
-			Init:            handleInit,
-			AllowDirMessage: handleAllowDirMessage,
-			SystemMessage:   handleSystemMessage,
-			ToolMessage:     handleToolMessage,
-			ProposalMessage: handleProposalMessage,
-			OptionsMessage:  handleOptionsMessage,
-			BlockedMessage:  handleBlockedMessage,
-			UpdateProgress:  handleUpdateProgress,
-			WorkDone:        handleWorkDone,
-			EnablePrompt:    handleEnablePrompt,
+			Close:            handleClose,
+			Init:             handleInit,
+			AllowDirMessage:  handleAllowDirMessage,
+			SystemMessage:    handleSystemMessage,
+			ReasoningMessage: handleReasoningMessage,
+			ToolMessage:      handleToolMessage,
+			ProposalMessage:  handleProposalMessage,
+			OptionsMessage:   handleOptionsMessage,
+			BlockedMessage:   handleBlockedMessage,
+			UpdateProgress:   handleUpdateProgress,
+			WorkDone:         handleWorkDone,
+			EnablePrompt:     handleEnablePrompt,
 		},
 	)
 }
@@ -206,6 +207,22 @@ func saveTheme(theme string) {
 	fmt.Printf("Post to URL %q failed with status %q\n", url, resp.Status)
 }
 
+// applyVerbosity actuates the configured verbosity level by setting the
+// matching CSS class on the document element, mirroring how the theme is set
+// via the data-theme attribute. Messages opt out of a level through the
+// corresponding "verbosity-hide-<level>" class (see styles.css).
+func applyVerbosity(verbosity string) {
+	if !wire.ValidVerbosity(verbosity) {
+		verbosity = wire.VerbosityMedium
+	}
+
+	documentElement := browser.DocumentElement()
+	documentElement.RemoveClass("verbosity-" + wire.VerbosityMinimal)
+	documentElement.RemoveClass("verbosity-" + wire.VerbosityMedium)
+	documentElement.RemoveClass("verbosity-" + wire.VerbosityHigh)
+	documentElement.AddClass("verbosity-" + verbosity)
+}
+
 func toggleSettings(this, e *browser.Object) any {
 	e.StopPropagation()
 
@@ -282,6 +299,14 @@ func loadGlobalSettings() {
 		defaultModCheckbox.SetChecked(false)
 	}
 
+	// Set verbosity level
+	verbositySelect := doc.GetElementByID("verbosity-select")
+	if wire.ValidVerbosity(settings.Verbosity) {
+		verbositySelect.SetValue(settings.Verbosity)
+	} else {
+		verbositySelect.SetValue(wire.VerbosityMedium)
+	}
+
 	// Render providers
 	renderProviders(settings.Providers)
 
@@ -304,6 +329,12 @@ func saveGlobalSettings(this, e *browser.Object) any {
 	defaultModCheckbox := doc.GetElementByID("default-modifications")
 	defaultModifications := defaultModCheckbox.GetChecked()
 
+	// Get verbosity level
+	verbosity := doc.GetElementByID("verbosity-select").GetValue()
+	if !wire.ValidVerbosity(verbosity) {
+		verbosity = wire.VerbosityMedium
+	}
+
 	// Get dark theme from document element
 	documentElement := browser.DocumentElement()
 	theme := documentElement.GetAttribute("data-theme")
@@ -323,6 +354,7 @@ func saveGlobalSettings(this, e *browser.Object) any {
 		AutoOpen:             autoOpen,
 		DefaultModifications: defaultModifications,
 		DarkTheme:            darkTheme,
+		Verbosity:            verbosity,
 		Providers:            providers,
 		AllowedDirs:          allowedDirs,
 	}
@@ -348,6 +380,7 @@ func saveGlobalSettings(this, e *browser.Object) any {
 		if resp.StatusCode == http.StatusOK {
 			butterbar("Global settings saved", true)
 			dialog.Close()
+			applyVerbosity(verbosity)
 			populateProviderModelSelect(&providers)
 		} else {
 			butterbar("Global settings NOT saved", false)
@@ -819,6 +852,8 @@ func handleInit(message *wire.InitMessage) {
 		documentElement.SetAttribute("data-theme", theme)
 	}
 
+	applyVerbosity(message.Verbosity)
+
 	name := doc.GetElementByID("project-name")
 	name.TextContent(message.ProjectName)
 
@@ -861,6 +896,10 @@ func sendAllowDir(allow bool) {
 
 func handleSystemMessage(markdown string) {
 	addMessage(systemMessage(markdown))
+}
+
+func handleReasoningMessage(markdown string) {
+	addMessage(reasoningMessage(markdown))
 }
 
 func handleToolMessage(message *wire.ToolMessage) {
