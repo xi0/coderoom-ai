@@ -132,6 +132,18 @@ html, body {
 [data-theme="light"] .sun-icon { display: none; }
 [data-theme="light"] .moon-icon { display: block; }
 
+/* Verbosity Level Visibility
+ * The configured verbosity level is applied as a class on the <html> element:
+ *   verbosity-minimal / verbosity-medium / verbosity-high
+ * Messages declare the levels they should be hidden at by carrying the
+ * matching "verbosity-hide-<level>" class. A message without any of these
+ * classes is always visible. */
+.verbosity-minimal .verbosity-hide-minimal,
+.verbosity-medium .verbosity-hide-medium,
+.verbosity-high .verbosity-hide-high {
+  display: none;
+}
+
 /* Mode Toggle Icon Visibility */
 .icon-btn[data-mode="modify"] .modify-icon { display: block; }
 .icon-btn[data-mode="modify"] .inspect-icon { display: none; }

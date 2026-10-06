@@ -13,6 +13,13 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
+// CSS classes used to hide a message at a given verbosity level. The active
+// level is set as a class on the document element (see applyVerbosity in
+// ui.go), and these classes are matched by styles.css.
+const (
+	verbosityHideMinimal = "verbosity-hide-minimal"
+)
+
 func renderMarkdown(md string) string {
 	p := parser.NewWithExtensions(parser.CommonExtensions)
 	doc := p.Parse([]byte(md))
@@ -160,7 +167,7 @@ func toolMessage(message *wire.ToolMessage) *b.Object {
 	}
 
 	return b.Div(
-		[]string{"message", "system-message", "tool-message"},
+		[]string{"message", "system-message", "tool-message", verbosityHideMinimal},
 		b.Div(
 			[]string{"message-content"},
 			b.Span(

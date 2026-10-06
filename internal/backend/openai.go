@@ -58,6 +58,7 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 		Init: &wire.InitMessage{
 			Modifications: be.Settings.GetDefaultModifications(),
 			DarkTheme:     be.Settings.GetDarkTheme(),
+			Verbosity:     be.Settings.GetVerbosity(),
 			ProjectName:   be.Settings.GetProjectName(),
 			ProjectDir:    be.Settings.ProjectDir,
 			Providers:     be.Settings.GetProviders(),

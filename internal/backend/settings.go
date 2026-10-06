@@ -141,6 +141,7 @@ func (s *Settings) loadGlobal() error {
 			s.global = &wire.GlobalSettings{
 				DefaultModifications: true,
 				DarkTheme:            true,
+				Verbosity:            wire.VerbosityMedium,
 			}
 			return nil
 		} else {
@@ -151,6 +152,12 @@ func (s *Settings) loadGlobal() error {
 	s.global = &wire.GlobalSettings{}
 	if err := json.Unmarshal(data, s.global); err != nil {
 		return fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	// Fall back to the default verbosity for configs written before the
+	// setting existed or that contain an unknown value.
+	if !wire.ValidVerbosity(s.global.Verbosity) {
+		s.global.Verbosity = wire.VerbosityMedium
 	}
 
 	return nil
@@ -215,6 +222,21 @@ func (s *Settings) SetDarkTheme(darkTheme bool) {
 	}
 
 	s.global.DarkTheme = darkTheme
+}
+
+func (s *Settings) GetVerbosity() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return wire.VerbosityMedium
+	}
+
+	if !wire.ValidVerbosity(s.global.Verbosity) {
+		return wire.VerbosityMedium
+	}
+
+	return s.global.Verbosity
 }
 
 func (s *Settings) GetProjectName() string {
