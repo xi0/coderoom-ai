@@ -12,17 +12,18 @@ import (
 )
 
 type MessageHandlers struct {
-	Close           func(bool)
-	Init            func(*wire.InitMessage)
-	AllowDirMessage func(string)
-	SystemMessage   func(string)
-	ToolMessage     func(*wire.ToolMessage)
-	ProposalMessage func(string)
-	OptionsMessage  func(*wire.OptionsMessage)
-	BlockedMessage  func(*wire.BlockedMessage)
-	UpdateProgress  func(*wire.ProgressMessage)
-	WorkDone        func()
-	EnablePrompt    func()
+	Close            func(bool)
+	Init             func(*wire.InitMessage)
+	AllowDirMessage  func(string)
+	SystemMessage    func(string)
+	ReasoningMessage func(string)
+	ToolMessage      func(*wire.ToolMessage)
+	ProposalMessage  func(string)
+	OptionsMessage   func(*wire.OptionsMessage)
+	BlockedMessage   func(*wire.BlockedMessage)
+	UpdateProgress   func(*wire.ProgressMessage)
+	WorkDone         func()
+	EnablePrompt     func()
 }
 
 type WebSocket struct {
@@ -90,6 +91,9 @@ func (ws *WebSocket) onMessage(data string) {
 	}
 	if message.SystemMessage != nil {
 		ws.handlers.SystemMessage(*message.SystemMessage)
+	}
+	if message.ReasoningMessage != nil {
+		ws.handlers.ReasoningMessage(*message.ReasoningMessage)
 	}
 	if message.ToolMessage != nil {
 		ws.handlers.ToolMessage(message.ToolMessage)

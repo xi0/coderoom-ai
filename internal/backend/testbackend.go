@@ -46,6 +46,7 @@ func (be *TestBackend) Run(writeChannel chan wire.BackendMessage, readChannel ch
 You can use the following keywords to test different message types in the UI.
 
 * system
+* reasoning
 * tool
 * proposal
 * options
@@ -74,6 +75,8 @@ func handleMessage(message wire.FrontendMessage, writeChannel chan wire.BackendM
 
 		if strings.Contains(message.Prompt.Prompt, "system") {
 			go systemMessage(writeChannel)
+		} else if strings.Contains(message.Prompt.Prompt, "reasoning") {
+			go reasoningMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "tool") {
 			go toolMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "proposal") {
@@ -115,6 +118,21 @@ This is some more text.`
 		SystemMessage: &systemMessage,
 		WorkDone:      true,
 		EnablePrompt:  true,
+	}
+}
+
+func reasoningMessage(writeChannel chan wire.BackendMessage) {
+	time.Sleep(2 * time.Second)
+
+	reasoningMessage := `Let me think about this step by step.
+
+1. First, I consider the available tools.
+2. Then, I decide that *this* is the best approach.`
+
+	writeChannel <- wire.BackendMessage{
+		ReasoningMessage: &reasoningMessage,
+		WorkDone:         true,
+		EnablePrompt:     true,
 	}
 }
 

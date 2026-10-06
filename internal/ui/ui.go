@@ -112,17 +112,18 @@ func init() {
 func initDone() {
 	webSocket = browser.NewWebSocket(
 		browser.MessageHandlers{
-			Close:           handleClose,
-			Init:            handleInit,
-			AllowDirMessage: handleAllowDirMessage,
-			SystemMessage:   handleSystemMessage,
-			ToolMessage:     handleToolMessage,
-			ProposalMessage: handleProposalMessage,
-			OptionsMessage:  handleOptionsMessage,
-			BlockedMessage:  handleBlockedMessage,
-			UpdateProgress:  handleUpdateProgress,
-			WorkDone:        handleWorkDone,
-			EnablePrompt:    handleEnablePrompt,
+			Close:            handleClose,
+			Init:             handleInit,
+			AllowDirMessage:  handleAllowDirMessage,
+			SystemMessage:    handleSystemMessage,
+			ReasoningMessage: handleReasoningMessage,
+			ToolMessage:      handleToolMessage,
+			ProposalMessage:  handleProposalMessage,
+			OptionsMessage:   handleOptionsMessage,
+			BlockedMessage:   handleBlockedMessage,
+			UpdateProgress:   handleUpdateProgress,
+			WorkDone:         handleWorkDone,
+			EnablePrompt:     handleEnablePrompt,
 		},
 	)
 }
@@ -895,6 +896,10 @@ func sendAllowDir(allow bool) {
 
 func handleSystemMessage(markdown string) {
 	addMessage(systemMessage(markdown))
+}
+
+func handleReasoningMessage(markdown string) {
+	addMessage(reasoningMessage(markdown))
 }
 
 func handleToolMessage(message *wire.ToolMessage) {

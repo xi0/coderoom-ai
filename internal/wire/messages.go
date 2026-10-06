@@ -20,17 +20,18 @@ type PromptMessage struct {
 // Messages from the backend
 
 type BackendMessage struct {
-	Init            *InitMessage     `json:"init,omitempty"`
-	Pong            *PingMessage     `json:"pong,omitempty"`
-	AllowDirMessage *string          `json:"allow_dir,omitempty"`
-	SystemMessage   *string          `json:"system_message,omitempty"`
-	ToolMessage     *ToolMessage     `json:"tool_message,omitempty"`
-	ProposalMessage *string          `json:"proposal_message,omitempty"`
-	OptionsMessage  *OptionsMessage  `json:"options_message,omitempty"`
-	BlockedMessage  *BlockedMessage  `json:"blocked_message,omitempty"`
-	UpdateProgress  *ProgressMessage `json:"update_progress,omitempty"`
-	WorkDone        bool             `json:"work_done"`
-	EnablePrompt    bool             `json:"enable_prompt"`
+	Init             *InitMessage     `json:"init,omitempty"`
+	Pong             *PingMessage     `json:"pong,omitempty"`
+	AllowDirMessage  *string          `json:"allow_dir,omitempty"`
+	SystemMessage    *string          `json:"system_message,omitempty"`
+	ReasoningMessage *string          `json:"reasoning_message,omitempty"`
+	ToolMessage      *ToolMessage     `json:"tool_message,omitempty"`
+	ProposalMessage  *string          `json:"proposal_message,omitempty"`
+	OptionsMessage   *OptionsMessage  `json:"options_message,omitempty"`
+	BlockedMessage   *BlockedMessage  `json:"blocked_message,omitempty"`
+	UpdateProgress   *ProgressMessage `json:"update_progress,omitempty"`
+	WorkDone         bool             `json:"work_done"`
+	EnablePrompt     bool             `json:"enable_prompt"`
 }
 
 type InitMessage struct {

@@ -18,6 +18,7 @@ import (
 // ui.go), and these classes are matched by styles.css.
 const (
 	verbosityHideMinimal = "verbosity-hide-minimal"
+	verbosityHideMedium  = "verbosity-hide-medium"
 )
 
 func renderMarkdown(md string) string {
@@ -140,6 +141,33 @@ func systemMessage(markdown string) *b.Object {
 		b.Div(
 			[]string{"message-content"},
 			b.HTML(renderMarkdown(markdown)),
+		),
+	)
+}
+
+// reasoningMessage renders the model's reasoning content ("reasoning_content").
+// It is only visible at the high verbosity level, so it carries both the
+// minimal and medium "verbosity-hide" classes.
+func reasoningMessage(markdown string) *b.Object {
+	return b.Div(
+		[]string{"message", "system-message", "reasoning-message", verbosityHideMinimal, verbosityHideMedium},
+		b.Div(
+			[]string{"message-content"},
+			b.Div(
+				[]string{"reasoning-header"},
+				b.Span(
+					[]string{"reasoning-icon"},
+					b.Text("💭"),
+				),
+				b.Span(
+					[]string{"reasoning-label"},
+					b.Text("Reasoning"),
+				),
+			),
+			b.Div(
+				[]string{"reasoning-text"},
+				b.HTML(renderMarkdown(markdown)),
+			),
 		),
 	)
 }

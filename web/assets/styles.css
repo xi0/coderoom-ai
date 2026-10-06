@@ -326,6 +326,33 @@ html, body {
   vertical-align: middle;
 }
 
+/* Reasoning Message Styling */
+.reasoning-message .message-content {
+  border-left: 3px solid var(--accent-color);
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.reasoning-message .reasoning-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.reasoning-message .reasoning-icon {
+  font-size: 0.9rem;
+}
+
+.reasoning-message .reasoning-text {
+  font-style: italic;
+}
+
 /* Plan Proposal Message Styling */
 .plan-message .message-content {
   display: flex;

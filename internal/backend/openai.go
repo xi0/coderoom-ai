@@ -192,6 +192,19 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 			}
 
 			msg := resp.Choices[0].Message
+
+			// Reasoning content (e.g. from reasoning-capable models) is shown to
+			// the user at high verbosity. It is only meant for display and must
+			// not be echoed back to the provider in subsequent requests, so it
+			// is cleared before the message is stored in the history.
+			if msg.ReasoningContent != "" {
+				reasoning := msg.ReasoningContent
+				writeChannel <- wire.BackendMessage{
+					ReasoningMessage: &reasoning,
+				}
+				msg.ReasoningContent = ""
+			}
+
 			messages = append(messages, msg)
 
 			// If no tool calls were made, the model has finished its response
