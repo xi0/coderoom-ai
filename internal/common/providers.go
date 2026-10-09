@@ -29,6 +29,10 @@ var (
 					Name:    "DeepSeek Flash",
 					ModelID: "deepseek-flash",
 				},
+				Model{
+					Name:    "DeepSeek V4 Pro",
+					ModelID: "deepseek-v4-pro",
+				},
 			},
 		},
 		&Provider{
