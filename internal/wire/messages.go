@@ -29,6 +29,7 @@ type BackendMessage struct {
 	ProposalMessage  *string          `json:"proposal_message,omitempty"`
 	OptionsMessage   *OptionsMessage  `json:"options_message,omitempty"`
 	BlockedMessage   *BlockedMessage  `json:"blocked_message,omitempty"`
+	FilesMessage     *FilesMessage    `json:"files_message,omitempty"`
 	UpdateProgress   *ProgressMessage `json:"update_progress,omitempty"`
 	WorkDone         bool             `json:"work_done"`
 	EnablePrompt     bool             `json:"enable_prompt"`
@@ -56,6 +57,22 @@ type OptionsMessage struct {
 type BlockedMessage struct {
 	Action    string   `json:"action,omitempty"`
 	Filenames []string `json:"filenames,omitempty"`
+}
+
+const (
+	FileActionEntireFile   = "entire_file"
+	FileActionModifiedFile = "modified_file"
+	FileActionDeletedFile  = "deleted_file"
+)
+
+type File struct {
+	Filename string `json:"filename"`
+	Action   string `json:"action"`
+	URI      string `json:"uri"`
+}
+
+type FilesMessage struct {
+	Files []File `json:"files,omitempty"`
 }
 
 type ProgressMessage struct {
@@ -129,4 +146,11 @@ type BlockingFilesRequest struct {
 type BlockingFilesResponse struct {
 	Files []string `json:"files"`
 	Error string   `json:"error,omitempty"`
+}
+
+// Response struct for the /edits handler
+
+type EditResponse struct {
+	Action  string `json:"action"`
+	Content string `json:"content"`
 }

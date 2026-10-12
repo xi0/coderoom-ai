@@ -1,7 +1,10 @@
 package ui
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -488,6 +491,167 @@ func blockedMessageDone(button *b.Object, confirmed bool) {
 
 	workingMessage.RemoveClass("hidden")
 	workingMessage.ScrollIntoView()
+}
+
+// filesMessage renders the list of files that were changed during the session.
+// Only the most recent files message is kept: any previous one in the
+// conversation is removed so that the displayed list is never stale.
+func filesMessage(message *wire.FilesMessage) *b.Object {
+	doc := b.Document()
+	for _, previous := range doc.GetElementsByClassName("files-message") {
+		previous.Remove()
+	}
+
+	var fileItems []*b.Object
+	for _, file := range message.Files {
+		fileItems = append(fileItems, fileMessageItem(file))
+	}
+
+	return b.Div(
+		[]string{"message", "system-message", "files-message"},
+		b.Div(
+			[]string{"message-content"},
+			b.P(
+				b.Text("The following files have been changed during this session:"),
+			),
+			b.UL(
+				fileItems...,
+			),
+		),
+	)
+}
+
+// fileMessageItem renders a single file entry of a files message. Files that
+// were written in full or modified get a button that opens a dialog showing
+// either the entire file or the diff; the action taken on the file is shown
+// next to its name in every case.
+func fileMessageItem(file wire.File) *b.Object {
+	switch file.Action {
+	case wire.FileActionEntireFile, wire.FileActionModifiedFile:
+		button := b.Button(
+			[]string{"file-btn"},
+			b.Text(file.Filename),
+		)
+		button.AddClickHandler(func(this, e *b.Object) any {
+			e.PreventDefault()
+
+			fileDialog(file)
+
+			return nil
+		})
+
+		return b.LI(
+			button,
+			b.Span(
+				[]string{"file-action"},
+				b.Text(" "+fileActionLabel(file.Action)),
+			),
+		)
+	default:
+		return b.LI(
+			b.Text(fmt.Sprintf("%s (%s)", file.Filename, fileActionLabel(file.Action))),
+		)
+	}
+}
+
+// fileActionLabel returns the human-readable label for a file action.
+func fileActionLabel(action string) string {
+	switch action {
+	case wire.FileActionEntireFile:
+		return "Entire file"
+	case wire.FileActionModifiedFile:
+		return "Modified"
+	case wire.FileActionDeletedFile:
+		return "Deleted"
+	default:
+		return action
+	}
+}
+
+// fileDialog opens a modal dialog that displays the content of a changed file.
+// The content is fetched asynchronously from the file's URI; for an
+// "entire_file" action it holds the whole file and for a "modified_file"
+// action it holds the diff.
+func fileDialog(file wire.File) {
+	dialog := b.Dialog([]string{"file-dialog"})
+	dialog.SetAttribute("closedby", "any")
+
+	content := b.Pre(
+		[]string{"file-content"},
+		b.Text("Loading..."),
+	)
+
+	closeButton := b.Button(
+		[]string{"secondary-btn"},
+		b.Text("Close"),
+	)
+	closeButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		dialog.Close()
+		return nil
+	})
+
+	dialog.Append(
+		b.H2(
+			b.Text(file.Filename),
+		),
+		content,
+		b.Div(
+			[]string{"file-dialog-actions"},
+			closeButton,
+		),
+	)
+
+	// The dialog is attached to the document body rather than to the message so
+	// that it is not removed when a newer files message replaces the current
+	// one. It removes itself once closed.
+	dialog.AddEventHandler("close", func(this, e *b.Object) any {
+		dialog.Remove()
+		return nil
+	})
+
+	doc := b.Document()
+	doc.Body().Append(dialog)
+
+	dialog.ShowModal()
+
+	go loadFileContent(file, content)
+}
+
+// loadFileContent fetches the content of a changed file from its URI and
+// displays it in the given element.
+func loadFileContent(file wire.File, content *b.Object) {
+	location := b.Document().Location()
+	url := fmt.Sprintf("%s//%s%s", location.Protocol, location.Host, file.URI)
+
+	resp, err := http.DefaultClient.Get(url)
+	if err != nil {
+		fmt.Printf("Get(): %v\n", err)
+		content.TextContent(fmt.Sprintf("Unable to load file: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		content.TextContent(fmt.Sprintf("Unable to load file: %s", resp.Status))
+		return
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("io.ReadAll(): %v\n", err)
+		content.TextContent(fmt.Sprintf("Unable to read file: %v", err))
+		return
+	}
+
+	var edit wire.EditResponse
+	if err := json.Unmarshal(data, &edit); err != nil {
+		fmt.Printf("json.Unmarshal(): %v\n", err)
+		content.TextContent(fmt.Sprintf("Unable to parse file: %v\n", err))
+		return
+	}
+
+	content.TextContent(edit.Content)
 }
 
 func optionsMessage(description string, options []string, sendOption func(int)) *b.Object {

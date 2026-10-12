@@ -27,6 +27,12 @@ func DocumentElement() *Object {
 	}
 }
 
+func (o *Object) Body() *Object {
+	return &Object{
+		value: o.value.Get("body"),
+	}
+}
+
 const (
 	EventChange = "change"
 	EventClick  = "click"

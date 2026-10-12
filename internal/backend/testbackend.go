@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/xi0/coderoom-ai/internal/wire"
+	"znkr.io/diff/textdiff"
 )
 
 var (
@@ -17,17 +18,17 @@ var (
 		"I don't really care",
 	}
 
-	confirmationFunc func(chan wire.BackendMessage, bool)
+	confirmationFunc func(chan wire.BackendMessage, string, bool)
 )
 
 type TestBackend struct {
 	Settings *Settings
 }
 
-func (be *TestBackend) Run(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage) {
-	log.Println("Test backend")
+func (be *TestBackend) Run(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage, sessionID string) {
+	log.Printf("Test backend (Session ID: %s)", sessionID)
 
-	confirmationFunc = confirmation
+	confirmationFunc = be.confirmation
 
 	go func() {
 		for message := range readChannel {
@@ -36,7 +37,7 @@ func (be *TestBackend) Run(writeChannel chan wire.BackendMessage, readChannel ch
 					Pong: message.Ping,
 				}
 			} else {
-				handleMessage(message, writeChannel)
+				be.handleMessage(message, writeChannel, sessionID)
 			}
 		}
 	}()
@@ -69,43 +70,43 @@ You can use the following keywords to test different message types in the UI.
 	select {}
 }
 
-func handleMessage(message wire.FrontendMessage, writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) handleMessage(message wire.FrontendMessage, writeChannel chan wire.BackendMessage, sessionID string) {
 	if message.Prompt != nil {
 		log.Printf("Prompt: %q\n", message.Prompt.Prompt)
 
 		if strings.Contains(message.Prompt.Prompt, "system") {
-			go systemMessage(writeChannel)
+			go be.systemMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "reasoning") {
-			go reasoningMessage(writeChannel)
+			go be.reasoningMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "tool") {
-			go toolMessage(writeChannel)
+			go be.toolMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "proposal") {
-			confirmationFunc = confirmation
-			go proposalMessage(writeChannel)
+			confirmationFunc = be.confirmation
+			go be.proposalMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "options") {
-			go optionsMessage(writeChannel)
+			go be.optionsMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "blocked") {
-			confirmationFunc = blockedConfirmation
-			go blockedMessage(writeChannel)
+			confirmationFunc = be.blockedConfirmation
+			go be.blockedMessage(writeChannel)
 		} else {
-			go unknownMessage(writeChannel)
+			go be.unknownMessage(writeChannel)
 		}
 	}
 
 	if message.ChosenOption != nil {
 		log.Printf("Chosen option: %d\n", *message.ChosenOption)
-		chosenOption(writeChannel, *message.ChosenOption)
+		be.chosenOption(writeChannel, *message.ChosenOption)
 	}
 
 	if message.Confirmation != nil {
 		log.Printf("Confirmation: %t\n", *message.Confirmation)
-		confirmationFunc(writeChannel, *message.Confirmation)
+		confirmationFunc(writeChannel, sessionID, *message.Confirmation)
 	}
 }
 
 // =============================================
 
-func systemMessage(writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) systemMessage(writeChannel chan wire.BackendMessage) {
 	time.Sleep(2 * time.Second)
 
 	systemMessage := `This is a test message.
@@ -121,7 +122,7 @@ This is some more text.`
 	}
 }
 
-func reasoningMessage(writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) reasoningMessage(writeChannel chan wire.BackendMessage) {
 	time.Sleep(2 * time.Second)
 
 	reasoningMessage := `Let me think about this step by step.
@@ -136,7 +137,7 @@ func reasoningMessage(writeChannel chan wire.BackendMessage) {
 	}
 }
 
-func toolMessage(writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) toolMessage(writeChannel chan wire.BackendMessage) {
 	time.Sleep(2 * time.Second)
 
 	toolMessage := "read_file(\"README.md\")"
@@ -148,7 +149,7 @@ func toolMessage(writeChannel chan wire.BackendMessage) {
 	}
 }
 
-func proposalMessage(writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) proposalMessage(writeChannel chan wire.BackendMessage) {
 	time.Sleep(2 * time.Second)
 
 	proposalMessage := `### Overview
@@ -172,7 +173,7 @@ I propose implementing a new feature to enhance the user experience. This plan o
 	}
 }
 
-func confirmation(writeChannel chan wire.BackendMessage, confirmation bool) {
+func (be *TestBackend) confirmation(writeChannel chan wire.BackendMessage, sessionID string, confirmation bool) {
 	if !confirmation {
 		systemMessage := `I will not go ahead with the proposed plan.`
 
@@ -265,16 +266,33 @@ func confirmation(writeChannel chan wire.BackendMessage, confirmation bool) {
 		time.Sleep(2 * time.Second)
 	}
 
+	be.addEdits(sessionID)
+
 	systemMessage := `I have succesfully completed the outlined steps. 🎉`
+	filesMessage := &wire.FilesMessage{
+		Files: []wire.File{
+			wire.File{
+				Filename: "src/core.go",
+				Action:   wire.FileActionModifiedFile,
+				URI:      fmt.Sprintf("/edits/%s/src/core.go", sessionID),
+			},
+			wire.File{
+				Filename: "src/core_test.go",
+				Action:   wire.FileActionModifiedFile,
+				URI:      fmt.Sprintf("/edits/%s/src/core_test.go", sessionID),
+			},
+		},
+	}
 
 	writeChannel <- wire.BackendMessage{
 		SystemMessage: &systemMessage,
+		FilesMessage:  filesMessage,
 		WorkDone:      true,
 		EnablePrompt:  true,
 	}
 }
 
-func optionsMessage(writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) optionsMessage(writeChannel chan wire.BackendMessage) {
 	time.Sleep(2 * time.Second)
 
 	writeChannel <- wire.BackendMessage{
@@ -286,7 +304,7 @@ func optionsMessage(writeChannel chan wire.BackendMessage) {
 	}
 }
 
-func chosenOption(writeChannel chan wire.BackendMessage, option int) {
+func (be *TestBackend) chosenOption(writeChannel chan wire.BackendMessage, option int) {
 	time.Sleep(2 * time.Second)
 
 	systemMessage := fmt.Sprintf("I will proceed with the option %q.", Options[option])
@@ -298,7 +316,7 @@ func chosenOption(writeChannel chan wire.BackendMessage, option int) {
 	}
 }
 
-func blockedMessage(writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) blockedMessage(writeChannel chan wire.BackendMessage) {
 	time.Sleep(2 * time.Second)
 
 	writeChannel <- wire.BackendMessage{
@@ -314,7 +332,7 @@ func blockedMessage(writeChannel chan wire.BackendMessage) {
 	}
 }
 
-func blockedConfirmation(writeChannel chan wire.BackendMessage, confirmation bool) {
+func (be *TestBackend) blockedConfirmation(writeChannel chan wire.BackendMessage, sessionID string, confirmation bool) {
 	if !confirmation {
 		systemMessage := `I will not run the action.`
 
@@ -344,7 +362,7 @@ func blockedConfirmation(writeChannel chan wire.BackendMessage, confirmation boo
 	}
 }
 
-func unknownMessage(writeChannel chan wire.BackendMessage) {
+func (be *TestBackend) unknownMessage(writeChannel chan wire.BackendMessage) {
 	systemMessage := `I did not find a matching keyword in your prompt.`
 
 	writeChannel <- wire.BackendMessage{
@@ -352,4 +370,40 @@ func unknownMessage(writeChannel chan wire.BackendMessage) {
 		WorkDone:      true,
 		EnablePrompt:  true,
 	}
+}
+
+func (be *TestBackend) addEdits(sessionID string) {
+	files := make(map[string]*wire.EditResponse)
+
+	fileNames := []string{"src/core.go", "src/core_test.go"}
+	for _, fn := range fileNames {
+		var lines1, lines2 []string
+		for i := 0; i < 100; i++ {
+			line1 := fmt.Sprintf("%s line %d", fn, i)
+			line2 := fmt.Sprintf("%s line %d", fn, i)
+
+			if i == 75 {
+				line2 += " (something added)"
+			}
+
+			if i != 37 {
+				lines1 = append(lines1, line1)
+			}
+			if i != 45 && i != 46 {
+				lines2 = append(lines2, line2)
+			}
+		}
+
+		// Calculate and add the unified diff
+		files[fn] = &wire.EditResponse{
+			Action: wire.FileActionModifiedFile,
+			Content: textdiff.Unified(
+				strings.Join(lines1, "\n"),
+				strings.Join(lines2, "\n"),
+			),
+		}
+
+	}
+
+	addEdits(sessionID, files)
 }

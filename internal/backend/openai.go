@@ -30,8 +30,8 @@ If more than one solution makes sense then ask the user for the desired option, 
 Report progress every 5-10 seconds if possible, using the "report_progress" tool.`
 )
 
-func (be *OpenAI) Run(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage) {
-	log.Println("OpenAI backend")
+func (be *OpenAI) Run(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage, sessionID string) {
+	log.Printf("OpenAI backend (Session ID: %s)", sessionID)
 
 	messageChannel := make(chan wire.FrontendMessage)
 
