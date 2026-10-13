@@ -651,7 +651,52 @@ func loadFileContent(file wire.File, content *b.Object) {
 		return
 	}
 
-	content.TextContent(edit.Content)
+	// For a modified file the content is a unified diff, which is colorized so
+	// that additions, deletions and hunk headers stand out. Any other content
+	// (e.g. the entire file) is shown as plain text.
+	if file.Action == wire.FileActionModifiedFile {
+		colorizeDiff(content, edit.Content)
+	} else {
+		content.TextContent(edit.Content)
+	}
+}
+
+// colorizeDiff renders a unified diff as a sequence of colorized lines inside
+// the given element. Each line is wrapped in a span whose class encodes the
+// kind of line so that it can be styled via CSS.
+func colorizeDiff(content *b.Object, diff string) {
+	content.RemoveChildren()
+
+	// A trailing newline would produce a final, empty line.
+	diff = strings.TrimSuffix(diff, "\n")
+
+	for _, line := range strings.Split(diff, "\n") {
+		content.Append(
+			b.Span(
+				[]string{"diff-line", diffLineClass(line)},
+				b.Text(line),
+			),
+		)
+	}
+}
+
+// diffLineClass classifies a single line of a unified diff based on its prefix
+// so that it can be colorized. The file and hunk header checks come first
+// because their prefixes ("+++", "---", "@@") also match the addition and
+// deletion checks.
+func diffLineClass(line string) string {
+	switch {
+	case strings.HasPrefix(line, "+++"), strings.HasPrefix(line, "---"):
+		return "diff-file"
+	case strings.HasPrefix(line, "@@"):
+		return "diff-hunk"
+	case strings.HasPrefix(line, "+"):
+		return "diff-add"
+	case strings.HasPrefix(line, "-"):
+		return "diff-del"
+	default:
+		return "diff-context"
+	}
 }
 
 func optionsMessage(description string, options []string, sendOption func(int)) *b.Object {
