@@ -83,6 +83,11 @@ func (s *Settings) serveGlobal(w http.ResponseWriter, r *http.Request) {
 		}
 
 		s.mu.Lock()
+		s.global = &wire.GlobalSettings{
+			DefaultModifications: true,
+			DarkTheme:            true,
+			Verbosity:            wire.VerbosityMedium,
+		}
 		err = json.Unmarshal(data, s.global)
 		s.mu.Unlock()
 		if err != nil {
