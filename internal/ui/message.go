@@ -101,7 +101,7 @@ func allowDirMessage(dir string, confirm func(bool)) *b.Object {
 				b.Text("Coderoom AI might read and modify files under this directory and execute the configured tools."),
 			),
 			b.P(
-				b.Text("Although the tool does have revert functionality, it is stronhly encouraged to use a version control system (e.g. git) for checkpointing the code."),
+				b.Text("Although the tool does have revert functionality, it is strongly encouraged to use a version control system (e.g. git) for checkpointing the code."),
 			),
 			b.P(
 				b.Em(

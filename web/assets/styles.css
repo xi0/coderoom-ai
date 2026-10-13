@@ -617,6 +617,50 @@ html, body {
   background-color: var(--accent-hover);
 }
 
+/* Allow Directory Message Styling */
+.allow-dir-message .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.allow-dir-message p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.allow-dir-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.allow-btn-deny {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.allow-btn-deny:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.allow-btn-allow {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.allow-btn-allow:hover {
+  background-color: var(--accent-hover);
+}
+
 /* Files Message Styling */
 .files-message .message-content {
   display: flex;
