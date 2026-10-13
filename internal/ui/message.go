@@ -58,6 +58,10 @@ func addMessage(m *b.Object) {
 	workingMessage := doc.GetElementByID("working-message")
 	parent := workingMessage.Parent()
 
+	// Animate the message as it enters the conversation (see .message-enter in
+	// styles.css).
+	m.AddClass("message-enter")
+
 	parent.InsertBefore(m, workingMessage)
 
 	lastMessage = m

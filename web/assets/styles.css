@@ -248,6 +248,31 @@ html, body {
   width: 100%;
 }
 
+/* Animate a message as it enters the conversation: it slides up from below
+ * into its final place while fading in. The class is applied to each newly
+ * added message (see addMessage in internal/ui/message.go). */
+@keyframes message-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-enter {
+  animation: message-arrive 0.3s ease-out;
+}
+
+/* Respect users who prefer reduced motion by skipping the entrance animation. */
+@media (prefers-reduced-motion: reduce) {
+  .message-enter {
+    animation: none;
+  }
+}
+
 .message-content {
   padding: 12px 16px;
   border-radius: 12px;
