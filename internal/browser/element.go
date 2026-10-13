@@ -43,6 +43,10 @@ func Br() *Object {
 	return element("br", nil, nil)
 }
 
+func H2(children ...*Object) *Object {
+	return element("h2", nil, children)
+}
+
 func H3(children ...*Object) *Object {
 	return element("h3", nil, children)
 }
@@ -65,6 +69,14 @@ func Em(children ...*Object) *Object {
 
 func UL(children ...*Object) *Object {
 	return element("ul", nil, children)
+}
+
+func Pre(classes []string, children ...*Object) *Object {
+	return element("pre", classes, children)
+}
+
+func Dialog(classes []string, children ...*Object) *Object {
+	return element("dialog", classes, children)
 }
 
 func LI(children ...*Object) *Object {

@@ -1,6 +1,8 @@
 package backend
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -12,7 +14,7 @@ import (
 )
 
 type Backend interface {
-	Run(chan wire.BackendMessage, chan wire.FrontendMessage)
+	Run(chan wire.BackendMessage, chan wire.FrontendMessage, string)
 }
 
 var (
@@ -43,7 +45,14 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go wsWriter(ws, writeChannel)
 	go wsReader(ws, readChannel)
 
-	backend.Run(writeChannel, readChannel)
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		log.Println(err)
+		return
+	}
+	sessionID := hex.EncodeToString(bytes)
+
+	backend.Run(writeChannel, readChannel, sessionID)
 }
 
 func wsReader(ws *websocket.Conn, channel chan wire.FrontendMessage) {

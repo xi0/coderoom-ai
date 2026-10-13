@@ -121,6 +121,7 @@ func initDone() {
 			ProposalMessage:  handleProposalMessage,
 			OptionsMessage:   handleOptionsMessage,
 			BlockedMessage:   handleBlockedMessage,
+			FilesMessage:     handleFilesMessage,
 			UpdateProgress:   handleUpdateProgress,
 			WorkDone:         handleWorkDone,
 			EnablePrompt:     handleEnablePrompt,
@@ -928,6 +929,10 @@ func sendChosenOption(option int) {
 
 func handleBlockedMessage(message *wire.BlockedMessage) {
 	addMessage(blockedMessage(message.Action, message.Filenames, sendConfirmation))
+}
+
+func handleFilesMessage(message *wire.FilesMessage) {
+	addMessage(filesMessage(message))
 }
 
 func handleUpdateProgress(message *wire.ProgressMessage) {

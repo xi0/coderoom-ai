@@ -10,6 +10,12 @@
   --user-msg-text: #ffffff;
   --system-msg-bg: #2a2a2a;
   --border-color: #333333;
+  --diff-add-bg: rgba(46, 160, 67, 0.25);
+  --diff-add-fg: #7ee787;
+  --diff-del-bg: rgba(248, 81, 73, 0.25);
+  --diff-del-fg: #ff7b72;
+  --diff-hunk-fg: #79c0ff;
+  --diff-file-fg: #a0a0a0;
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -25,6 +31,12 @@
   --user-msg-text: #ffffff;
   --system-msg-bg: #f1f3f5;
   --border-color: #e9ecef;
+  --diff-add-bg: rgba(46, 160, 67, 0.15);
+  --diff-add-fg: #1a7f37;
+  --diff-del-bg: rgba(248, 81, 73, 0.15);
+  --diff-del-fg: #cf222e;
+  --diff-hunk-fg: #0969da;
+  --diff-file-fg: #6c757d;
 }
 
 * {
@@ -603,6 +615,109 @@ html, body {
 
 .blocked-btn-allow:hover {
   background-color: var(--accent-hover);
+}
+
+/* Files Message Styling */
+.files-message .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.files-message p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.files-message ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 0;
+  margin: 0;
+}
+
+.file-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  color: var(--accent-color);
+  text-align: left;
+}
+
+.file-btn:hover {
+  background-color: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+/* File Dialog Styling */
+.file-dialog {
+  width: 80vw;
+  max-width: 90vw;
+}
+
+.file-dialog h2 {
+  font-family: monospace;
+  font-size: 1.1rem;
+  word-break: break-all;
+}
+
+.file-content {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 0;
+  font-family: monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+  text-align: left;
+  white-space: pre;
+  overflow: auto;
+  max-height: 60vh;
+}
+
+/* Colorized unified diff shown for modified files. Each line is a block so
+ * that its background spans the full width of the dialog. */
+.file-content .diff-line {
+  display: block;
+  padding: 0 4px;
+}
+
+.file-content .diff-add {
+  background-color: var(--diff-add-bg);
+  color: var(--diff-add-fg);
+}
+
+.file-content .diff-del {
+  background-color: var(--diff-del-bg);
+  color: var(--diff-del-fg);
+}
+
+.file-content .diff-hunk {
+  color: var(--diff-hunk-fg);
+}
+
+.file-content .diff-file {
+  color: var(--diff-file-fg);
+}
+
+.file-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Progress Bar Styling */

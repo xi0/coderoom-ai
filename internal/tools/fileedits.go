@@ -1,9 +1,15 @@
 package tools
 
 import (
+	"bytes"
+	"fmt"
 	"io/fs"
 	"os"
 	"sort"
+
+	"github.com/xi0/coderoom-ai/internal/wire"
+
+	"znkr.io/diff/textdiff"
 )
 
 // FileEdits keeps track of changes to different files during a session.
@@ -92,6 +98,92 @@ func (e *FileEdits) Filenames() []string {
 	sort.Strings(result)
 
 	return result
+}
+
+// Diffs constructs a FilesMessage describing every file that was changed during
+// the session together with the action that was performed on it, as well as a
+// map from each filename to the EditResponse that should be served for it. The
+// URI of every file points to the session scoped endpoint that serves the
+// corresponding EditResponse.
+//
+// The content of an EditResponse holds the entire resulting file for files that
+// were newly created during the session and a unified diff otherwise.
+func (e *FileEdits) Diffs(sessionID string) (*wire.FilesMessage, map[string]*wire.EditResponse) {
+	filenames := e.Filenames()
+
+	files := make([]wire.File, 0, len(filenames))
+	responses := make(map[string]*wire.EditResponse, len(filenames))
+
+	for _, filename := range filenames {
+		edit := e.edits[filename]
+
+		original := edit.OrigContent
+		current := edit.currentContent()
+
+		action := actionFor(edit)
+
+		var content string
+		if action == wire.FileActionEntireFile {
+			content = string(current)
+		} else {
+			content = textdiff.Unified(string(original), string(current))
+		}
+
+		files = append(files, wire.File{
+			Filename: filename,
+			Action:   action,
+			URI:      fmt.Sprintf("/edits/%s/%s", sessionID, filename),
+		})
+		responses[filename] = &wire.EditResponse{
+			Action:  action,
+			Content: content,
+		}
+	}
+
+	var filesMessage *wire.FilesMessage
+	if len(files) > 0 {
+		filesMessage = &wire.FilesMessage{
+			Files: files,
+		}
+	}
+
+	return filesMessage, responses
+}
+
+// actionFor reports the File action that describes the changes recorded for the
+// file. A file whose last change was a deletion is reported as deleted, a file
+// that did not exist before the session is reported as an entire file and any
+// other change is reported as a modification.
+func actionFor(edit *FileEdit) string {
+	if n := len(edit.Changes); n > 0 && edit.Changes[n-1].Deleted {
+		return wire.FileActionDeletedFile
+	}
+
+	if edit.OrigNonExistent {
+		return wire.FileActionEntireFile
+	}
+
+	return wire.FileActionModifiedFile
+}
+
+// currentContent reconstructs the content of the file after all the recorded
+// changes have been replayed on top of its original content.
+func (edit *FileEdit) currentContent() []byte {
+	content := edit.OrigContent
+
+	for _, change := range edit.Changes {
+		switch {
+		case change.Deleted:
+			content = nil
+		case change.Old == nil:
+			// A whole-file write replaces the entire content.
+			content = change.New
+		default:
+			content = bytes.Replace(content, change.Old, change.New, 1)
+		}
+	}
+
+	return content
 }
 
 // FileEdit keeps track of all changes to one file. The Orig* fields holds the

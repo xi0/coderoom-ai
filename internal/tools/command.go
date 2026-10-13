@@ -34,12 +34,20 @@ func commandTool(name, description string, tool *wire.ToolSettings) *Tool {
 
 			blockingFiles := blockingfiles.BlockingFilesInList(tool.BlockingFiles, options.Edits.Filenames())
 			if len(blockingFiles) > 0 {
+				filesMessage, edits := options.Edits.Diffs(options.SessionID)
+				if len(edits) > 0 {
+					if options.AddEdits != nil {
+						options.AddEdits(options.SessionID, edits)
+					}
+				}
+
 				options.WriteChannel <- wire.BackendMessage{
 					BlockedMessage: &wire.BlockedMessage{
 						Action:    name,
 						Filenames: blockingFiles,
 					},
-					WorkDone: true,
+					FilesMessage: filesMessage,
+					WorkDone:     true,
 				}
 
 				confirmed := <-options.ConfirmationChannel

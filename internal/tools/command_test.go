@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/xi0/coderoom-ai/internal/wire"
+
+	"znkr.io/diff/textdiff"
 )
 
 // requireBash skips the calling test when bash is not available on PATH. The
@@ -320,8 +322,10 @@ func requireToolMessage(t *testing.T, writeChannel chan wire.BackendMessage, wan
 }
 
 // requireBlockedMessage consumes the blocked message emitted by commandTool and
-// asserts its action, filenames (in order) and the WorkDone flag.
-func requireBlockedMessage(t *testing.T, writeChannel chan wire.BackendMessage, wantAction string, wantFilenames []string) {
+// asserts its action, filenames (in order) and the WorkDone flag. It returns
+// the consumed message so callers can make further assertions on it, such as on
+// the FilesMessage sent alongside the block.
+func requireBlockedMessage(t *testing.T, writeChannel chan wire.BackendMessage, wantAction string, wantFilenames []string) *wire.BackendMessage {
 	t.Helper()
 
 	select {
@@ -338,8 +342,10 @@ func requireBlockedMessage(t *testing.T, writeChannel chan wire.BackendMessage, 
 		if !msg.WorkDone {
 			t.Error("Expected WorkDone to be true on the blocked message")
 		}
+		return &msg
 	case <-time.After(2 * time.Second):
 		t.Fatal("Timed out waiting for the blocked message")
+		return nil
 	}
 }
 
@@ -578,6 +584,128 @@ func TestCommandToolNoBlockWhenModifiedFileDoesNotMatch(t *testing.T) {
 
 	requireToolMessage(t, writeChannel, "build_project()")
 	requireNoBlockedMessage(t, writeChannel)
+}
+
+// blockingCommandOptionsWithDiff builds on blockingCommandOptions by writing the
+// original content of filename to the tool root and then recording a whole-file
+// replacement for it. Because the file exists on disk when it is registered,
+// FileEdits.Diffs reports it as a modified file with a genuine unified diff, so
+// tests can assert on the exact diff forwarded to AddEdits.
+func blockingCommandOptionsWithDiff(t *testing.T, filename, original, replacement string, confirmationBuffer int) (*ToolOptions, chan wire.BackendMessage, chan bool, string) {
+	t.Helper()
+
+	options, writeChannel, confirmationChannel, tmpDir := blockingCommandOptions(t, nil, confirmationBuffer)
+
+	if err := os.WriteFile(filepath.Join(tmpDir, filename), []byte(original), 0644); err != nil {
+		t.Fatalf("Failed to write %s: %v", filename, err)
+	}
+	options.Edits.WriteFile(filename, []byte(replacement), false)
+
+	return options, writeChannel, confirmationChannel, tmpDir
+}
+
+// requireFilesMessage asserts that msg carries a FilesMessage listing exactly
+// the expected files. The FilesMessage is sent alongside the BlockedMessage so
+// the frontend can display the diffs of the files that triggered the block.
+func requireFilesMessage(t *testing.T, msg *wire.BackendMessage, want []wire.File) {
+	t.Helper()
+
+	if msg.FilesMessage == nil {
+		t.Fatalf("Expected FilesMessage to be set, got %+v", msg)
+	}
+	if !reflect.DeepEqual(msg.FilesMessage.Files, want) {
+		t.Errorf("Expected files message %v, got %v", want, msg.FilesMessage.Files)
+	}
+}
+
+// TestCommandToolAddsDiffsOnBlockedFiles verifies that when a modified file
+// triggers a block the tool forwards the diffs produced by FileEdits.Diffs to
+// the AddEdits callback, so the session-scoped edits store is populated.
+func TestCommandToolAddsDiffsOnBlockedFiles(t *testing.T) {
+	requireBash(t)
+	const original = "original makefile\n"
+	const replacement = "modified makefile\n"
+
+	options, writeChannel, confirmationChannel, _ := blockingCommandOptionsWithDiff(t, "Makefile", original, replacement, 1)
+
+	options.SessionID = "session123"
+
+	var (
+		addEditsCalls int
+		gotSessionID  string
+		gotFiles      map[string]*wire.EditResponse
+	)
+	options.AddEdits = func(sessionID string, files map[string]*wire.EditResponse) {
+		addEditsCalls++
+		gotSessionID = sessionID
+		gotFiles = files
+	}
+
+	// Pre-approve the block so the handler can proceed without a goroutine.
+	confirmationChannel <- true
+
+	tool := commandTool("build_project", "Builds the project.", &wire.ToolSettings{
+		Command:       "true",
+		BlockingFiles: []string{"Makefile"},
+	})
+
+	if _, err := tool.call("{}", options); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	requireToolMessage(t, writeChannel, "build_project()")
+	requireBlockedMessage(t, writeChannel, "build_project", []string{"Makefile"})
+
+	if addEditsCalls != 1 {
+		t.Fatalf("Expected AddEdits to be called once, got %d", addEditsCalls)
+	}
+	if gotSessionID != "session123" {
+		t.Errorf("Expected session ID %q, got %q", "session123", gotSessionID)
+	}
+
+	response, ok := gotFiles["Makefile"]
+	if !ok {
+		t.Fatalf("Expected edits to include Makefile, got %v", gotFiles)
+	}
+	if response.Action != wire.FileActionModifiedFile {
+		t.Errorf("Expected action %q, got %q", wire.FileActionModifiedFile, response.Action)
+	}
+	if want := textdiff.Unified(original, replacement); response.Content != want {
+		t.Errorf("Expected diff %q, got %q", want, response.Content)
+	}
+}
+
+// TestCommandToolSendsFilesMessageOnBlockedFiles verifies that the blocked
+// message emitted when a modified file triggers a block carries a FilesMessage
+// describing the affected files.
+func TestCommandToolSendsFilesMessageOnBlockedFiles(t *testing.T) {
+	requireBash(t)
+	options, writeChannel, confirmationChannel, _ := blockingCommandOptions(t, []string{"Makefile"}, 1)
+
+	options.SessionID = "session123"
+
+	// Pre-approve the block so the handler can proceed without a goroutine.
+	confirmationChannel <- true
+
+	tool := commandTool("build_project", "Builds the project.", &wire.ToolSettings{
+		Command:       "true",
+		BlockingFiles: []string{"Makefile"},
+	})
+
+	if _, err := tool.call("{}", options); err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	requireToolMessage(t, writeChannel, "build_project()")
+	msg := requireBlockedMessage(t, writeChannel, "build_project", []string{"Makefile"})
+
+	requireFilesMessage(t, msg, []wire.File{
+		{
+			Filename: "Makefile",
+			Action:   wire.FileActionEntireFile,
+			URI:      "/edits/session123/Makefile",
+		},
+	})
 }
 
 // TestCommandToolNoBlockWithoutEdits verifies that a nil FileEdits (no recorded

@@ -3,6 +3,10 @@ package tools
 import (
 	"os"
 	"testing"
+
+	"github.com/xi0/coderoom-ai/internal/wire"
+
+	"znkr.io/diff/textdiff"
 )
 
 // newTestFileEdits creates a temporary directory, opens it as a root and
@@ -296,5 +300,169 @@ func TestFileEditsDirectoryHasNoOriginalContent(t *testing.T) {
 	}
 	if edit.OrigContent != nil {
 		t.Errorf("Expected OrigContent to be nil for a directory, got %q", edit.OrigContent)
+	}
+}
+
+func TestFileEditsDiffsNewFile(t *testing.T) {
+	fe, _ := newTestFileEdits(t)
+
+	fe.WriteFile("new.txt", []byte("brand new content"), true)
+
+	message, responses := fe.Diffs("session123")
+
+	if len(message.Files) != 1 {
+		t.Fatalf("Expected 1 file, got %d", len(message.Files))
+	}
+
+	file := message.Files[0]
+	if file.Filename != "new.txt" {
+		t.Errorf("Expected filename %q, got %q", "new.txt", file.Filename)
+	}
+	if file.Action != wire.FileActionEntireFile {
+		t.Errorf("Expected action %q, got %q", wire.FileActionEntireFile, file.Action)
+	}
+	if want := "/edits/session123/new.txt"; file.URI != want {
+		t.Errorf("Expected URI %q, got %q", want, file.URI)
+	}
+
+	response, ok := responses["new.txt"]
+	if !ok {
+		t.Fatal("Expected a response for new.txt")
+	}
+	if response.Action != wire.FileActionEntireFile {
+		t.Errorf("Expected response action %q, got %q", wire.FileActionEntireFile, response.Action)
+	}
+	if want := "brand new content"; response.Content != want {
+		t.Errorf("Expected content %q, got %q", want, response.Content)
+	}
+}
+
+func TestFileEditsDiffsModifiedFile(t *testing.T) {
+	fe, tmpDir := newTestFileEdits(t)
+
+	original := []byte("hello world")
+	if err := os.WriteFile(tmpDir+"/edit.txt", original, 0644); err != nil {
+		t.Fatalf("Failed to create file: %v", err)
+	}
+
+	fe.EditFile("edit.txt", []byte("hello"), []byte("goodbye"))
+
+	message, responses := fe.Diffs("session123")
+
+	if len(message.Files) != 1 {
+		t.Fatalf("Expected 1 file, got %d", len(message.Files))
+	}
+
+	file := message.Files[0]
+	if file.Action != wire.FileActionModifiedFile {
+		t.Errorf("Expected action %q, got %q", wire.FileActionModifiedFile, file.Action)
+	}
+
+	response, ok := responses["edit.txt"]
+	if !ok {
+		t.Fatal("Expected a response for edit.txt")
+	}
+	if response.Action != wire.FileActionModifiedFile {
+		t.Errorf("Expected response action %q, got %q", wire.FileActionModifiedFile, response.Action)
+	}
+
+	want := textdiff.Unified("hello world", "goodbye world")
+	if response.Content != want {
+		t.Errorf("Expected content %q, got %q", want, response.Content)
+	}
+}
+
+func TestFileEditsDiffsWholeFileOverwrite(t *testing.T) {
+	fe, tmpDir := newTestFileEdits(t)
+
+	if err := os.WriteFile(tmpDir+"/over.txt", []byte("original content"), 0644); err != nil {
+		t.Fatalf("Failed to create file: %v", err)
+	}
+
+	fe.WriteFile("over.txt", []byte("replacement"), false)
+
+	message, responses := fe.Diffs("session123")
+
+	if len(message.Files) != 1 {
+		t.Fatalf("Expected 1 file, got %d", len(message.Files))
+	}
+	if message.Files[0].Action != wire.FileActionModifiedFile {
+		t.Errorf("Expected action %q, got %q", wire.FileActionModifiedFile, message.Files[0].Action)
+	}
+
+	want := textdiff.Unified("original content", "replacement")
+	if got := responses["over.txt"].Content; got != want {
+		t.Errorf("Expected content %q, got %q", want, got)
+	}
+}
+
+func TestFileEditsDiffsDeletedFile(t *testing.T) {
+	fe, tmpDir := newTestFileEdits(t)
+
+	if err := os.WriteFile(tmpDir+"/delete.txt", []byte("content to delete"), 0644); err != nil {
+		t.Fatalf("Failed to create file: %v", err)
+	}
+
+	fe.DeleteFile("delete.txt")
+
+	message, responses := fe.Diffs("session123")
+
+	if len(message.Files) != 1 {
+		t.Fatalf("Expected 1 file, got %d", len(message.Files))
+	}
+	if message.Files[0].Action != wire.FileActionDeletedFile {
+		t.Errorf("Expected action %q, got %q", wire.FileActionDeletedFile, message.Files[0].Action)
+	}
+
+	response, ok := responses["delete.txt"]
+	if !ok {
+		t.Fatal("Expected a response for delete.txt")
+	}
+	if response.Action != wire.FileActionDeletedFile {
+		t.Errorf("Expected response action %q, got %q", wire.FileActionDeletedFile, response.Action)
+	}
+
+	want := textdiff.Unified("content to delete", "")
+	if response.Content != want {
+		t.Errorf("Expected content %q, got %q", want, response.Content)
+	}
+}
+
+func TestFileEditsDiffsNoChanges(t *testing.T) {
+	fe, _ := newTestFileEdits(t)
+
+	message, responses := fe.Diffs("session123")
+
+	if message != nil {
+		t.Errorf("Expected no files, got %d", len(message.Files))
+	}
+	if len(responses) != 0 {
+		t.Errorf("Expected no responses, got %d", len(responses))
+	}
+}
+
+func TestFileEditsDiffsMultipleChangesToSameFile(t *testing.T) {
+	fe, tmpDir := newTestFileEdits(t)
+
+	if err := os.WriteFile(tmpDir+"/multi.txt", []byte("aaa bbb"), 0644); err != nil {
+		t.Fatalf("Failed to create file: %v", err)
+	}
+
+	fe.EditFile("multi.txt", []byte("aaa"), []byte("xxx"))
+	fe.EditFile("multi.txt", []byte("bbb"), []byte("yyy"))
+
+	message, responses := fe.Diffs("session123")
+
+	if len(message.Files) != 1 {
+		t.Fatalf("Expected 1 file, got %d", len(message.Files))
+	}
+	if message.Files[0].Action != wire.FileActionModifiedFile {
+		t.Errorf("Expected action %q, got %q", wire.FileActionModifiedFile, message.Files[0].Action)
+	}
+
+	// Both edits are replayed on top of the original content before diffing.
+	want := textdiff.Unified("aaa bbb", "xxx yyy")
+	if got := responses["multi.txt"].Content; got != want {
+		t.Errorf("Expected content %q, got %q", want, got)
 	}
 }

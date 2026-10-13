@@ -102,6 +102,7 @@ func main() {
 
 	http.HandleFunc("/", serveHTTP)
 	http.HandleFunc("/chat", backend.ServeHTTP)
+	http.HandleFunc("/edits/", backend.ServeEdits)
 	http.Handle("/settings/", settings)
 
 	url := fmt.Sprintf("http://localhost:%d/", *port)
