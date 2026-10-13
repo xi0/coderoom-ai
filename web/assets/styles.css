@@ -233,7 +233,7 @@ html, body {
 
 .chat-conversation {
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -801,7 +801,7 @@ html, body {
 
 .input-wrapper {
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   display: flex;
   align-items: flex-end;
   background-color: var(--bg-tertiary);
