@@ -48,10 +48,10 @@ func (be *OpenAI) Run(writeChannel chan wire.BackendMessage, readChannel chan wi
 		close(messageChannel)
 	}()
 
-	be.chat(writeChannel, messageChannel)
+	be.chat(writeChannel, messageChannel, sessionID)
 }
 
-func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage) {
+func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan wire.FrontendMessage, sessionID string) {
 	state := StateInit
 
 	writeChannel <- wire.BackendMessage{
@@ -80,7 +80,7 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 	promptChannel := make(chan wire.PromptMessage)
 	optionChannel := make(chan int)
 	confirmationChannel := make(chan bool)
-	go be.agentLoop(writeChannel, promptChannel, optionChannel, confirmationChannel)
+	go be.agentLoop(writeChannel, promptChannel, optionChannel, confirmationChannel, sessionID)
 
 	for message := range readChannel {
 		switch state {
@@ -144,7 +144,7 @@ func (be *OpenAI) client(providerID, modelID string) (*openai.Client, *wire.Prov
 	return openai.NewClientWithConfig(config), provider
 }
 
-func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan wire.PromptMessage, optionChannel chan int, confirmationChannel chan bool) {
+func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan wire.PromptMessage, optionChannel chan int, confirmationChannel chan bool, sessionID string) {
 	ctx := context.Background()
 	toolsList := tools.BuildToolsList(be.Settings.GetBuildProjectTool(), be.Settings.GetRunTestsTool())
 
@@ -209,8 +209,14 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 
 			// If no tool calls were made, the model has finished its response
 			if len(msg.ToolCalls) == 0 {
+				filesMessage, edits := edits.Diffs(sessionID)
+				if len(edits) > 0 {
+					addEdits(sessionID, edits)
+				}
+
 				writeChannel <- wire.BackendMessage{
 					SystemMessage: &msg.Content,
+					FilesMessage:  filesMessage,
 					WorkDone:      true,
 					EnablePrompt:  true,
 				}
@@ -218,12 +224,14 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 			} else {
 				// Handle tool execution requests from the model
 				toolOptions := &tools.ToolOptions{
+					SessionID:           sessionID,
 					Modifications:       prompt.Modifications,
 					Edits:               edits,
 					Root:                root,
 					WriteChannel:        writeChannel,
 					OptionChannel:       optionChannel,
 					ConfirmationChannel: confirmationChannel,
+					AddEdits:            addEdits,
 				}
 
 				for _, toolCall := range msg.ToolCalls {

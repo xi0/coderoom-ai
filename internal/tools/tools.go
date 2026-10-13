@@ -76,12 +76,14 @@ type Tool struct {
 }
 
 type ToolOptions struct {
+	SessionID           string
 	Modifications       bool
 	Edits               *FileEdits
 	Root                *os.Root
 	WriteChannel        chan wire.BackendMessage
 	OptionChannel       chan int
 	ConfirmationChannel chan bool
+	AddEdits            func(sessionID string, files map[string]*wire.EditResponse)
 }
 
 func (t *Tool) call(argsJSON string, options *ToolOptions) (string, error) {
