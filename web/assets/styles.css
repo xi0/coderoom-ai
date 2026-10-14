@@ -279,6 +279,11 @@ html, body {
   line-height: 1.5;
   font-size: 0.95rem;
   word-break: break-word;
+  /* The message is a flex row, so without this the content box would grow to
+   * fit the longest line of an embedded code block (flex items default to
+   * min-width: auto). That prevents the code block's own scroll container from
+   * ever being constrained. */
+  min-width: 0;
 }
 
 .system-message {
@@ -486,6 +491,23 @@ html, body {
 
 .message-content li strong {
   color: var(--accent-color);
+}
+
+/* Markdown code blocks. A thin border and a distinct background make them
+ * stand out from the surrounding message text, and long lines scroll
+ * horizontally instead of spilling past the edge of the message. */
+.message-content pre {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+  max-width: 100%;
+  font-family: monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: pre;
 }
 
 .plan-actions {
