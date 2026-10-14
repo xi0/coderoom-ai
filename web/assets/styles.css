@@ -16,6 +16,8 @@
   --diff-del-fg: #ff7b72;
   --diff-hunk-fg: #79c0ff;
   --diff-file-fg: #a0a0a0;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.20);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -37,6 +39,8 @@
   --diff-del-fg: #cf222e;
   --diff-hunk-fg: #0969da;
   --diff-file-fg: #6c757d;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.20);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -52,6 +56,48 @@ html, body {
   font-family: var(--font-family);
   background-color: var(--bg-primary);
   color: var(--text-primary);
+}
+
+/* Scrollbars
+ * Themed to match the rest of the UI instead of the platform default. Chromium
+ * and WebKit expose the ::-webkit-scrollbar pseudo-elements, which give full
+ * control (a slim, rounded, padded thumb over a transparent track). Firefox has
+ * no such pseudo-elements, so it is served the standard scrollbar-width /
+ * scrollbar-color properties instead. Those are gated behind a Firefox-only
+ * @supports test because Chromium (since v121) also understands them and, when
+ * present, would ignore the richer ::-webkit-scrollbar styling below. The thumb
+ * color comes from the theme variables, so it adapts to light/dark automatically. */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  /* A transparent border plus background-clip insets the thumb from the track
+   * edges, which reads as a floating, rounded pill. */
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@supports (-moz-appearance: none) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
 }
 
 .app-container {
