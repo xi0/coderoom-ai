@@ -51,17 +51,6 @@ var (
 			},
 		},
 		&Provider{
-			Name:       "GitHub Models",
-			ProviderID: "github-models",
-			BaseURL:    "https://models.inference.ai.azure.com",
-			Models: []Model{
-				Model{
-					Name:    "GPT-4.1 Mini",
-					ModelID: "gpt-4-1-mini",
-				},
-			},
-		},
-		&Provider{
 			Name:       "GDPRchat",
 			ProviderID: "gdprchat",
 			BaseURL:    "https://gdprchat.eu/api/v1",
@@ -75,11 +64,11 @@ var (
 		&Provider{
 			Name:       "Kimi (Moonshot AI)",
 			ProviderID: "kimi",
-			BaseURL:    "https://api.moonshot.cn/v1",
+			BaseURL:    "https://api.moonshot.ai/v1",
 			Models: []Model{
 				Model{
-					Name:    "Kimi K2",
-					ModelID: "kimi-k2-turbo-preview",
+					Name:    "Kimi K3",
+					ModelID: "kimi-k3",
 				},
 			},
 		},
@@ -89,8 +78,8 @@ var (
 			BaseURL:    "https://api.openai.com/v1",
 			Models: []Model{
 				Model{
-					Name:    "GPT-5.6 Terra",
-					ModelID: "gpt-5.6-terra",
+					Name:    "GPT-6 Luna",
+					ModelID: "gpt-6-luna",
 				},
 			},
 		},
