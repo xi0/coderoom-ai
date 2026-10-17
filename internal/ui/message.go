@@ -64,7 +64,9 @@ func addMessage(m *b.Object) {
 
 	parent.InsertBefore(m, workingMessage)
 
-	lastMessage = m
+	if !m.HasClass("reasoning-message") {
+		lastMessage = m
+	}
 
 	workingMessage.ScrollIntoView()
 }
@@ -292,6 +294,10 @@ func addToolMessageLine(message *b.Object, tool string) {
 			b.Text(tool),
 		),
 	)
+
+	doc := b.Document()
+	workingMessage := doc.GetElementByID("working-message")
+	workingMessage.ScrollIntoView()
 }
 
 // addToolMessageCount shows or increments the counter pill in a tool message.
