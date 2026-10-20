@@ -43,6 +43,8 @@ coderoom-ai/
 ├── go.mod                    # Go module definition
 ├── go.sum                    # Go module checksums
 ├── Makefile                  # Build automation
+├── build.bat                 # Build script for Windows
+├── runtests.bat              # Test script for Windows
 └── copy_wasm_exec.go         # Utility to copy WASM exec file
 ```
 
@@ -64,7 +66,7 @@ coderoom-ai/
 
 ### Prerequisites
 - Go 1.25.12 or later
-- Make (optional, for using Makefile)
+- Make (optional, for using Makefile on Linux/macOS; not needed on Windows, where `build.bat` and `runtests.bat` are provided)
 
 ### Build Steps
 
@@ -78,6 +80,12 @@ coderoom-ai/
    ```bash
    make
    ```
+
+   **On Windows**, use the provided batch script instead of `make`:
+   ```bat
+   build.bat
+   ```
+   This compiles `web/dist/main.wasm`, copies `wasm_exec.js` into `web/dist/`, and builds `bin\coderoom-ai.exe`.
 
 ## How to Use
 
@@ -186,6 +194,14 @@ Or run tests directly with Go:
 ```bash
 go test -v ./internal/tools/...
 ```
+
+On Windows, use the provided batch script instead:
+
+```bat
+runtests.bat
+```
+
+It runs the `internal/backend`, `internal/blockingfiles`, and `internal/tools` test packages.
 
 ### Test Coverage
 
