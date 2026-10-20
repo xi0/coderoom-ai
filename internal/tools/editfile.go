@@ -50,6 +50,10 @@ func editFileTool() *Tool {
 				return "", fmt.Errorf("invalid arguments for edit_file: %w", err)
 			}
 
+			if isSourceControlPath(args.RelativePath) {
+				return "", sourceControlPathError(args.RelativePath)
+			}
+
 			toolString := fmt.Sprintf("edit_file(%q)", args.RelativePath)
 			multipleFmt := "%d edits"
 			options.WriteChannel <- wire.BackendMessage{

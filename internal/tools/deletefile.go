@@ -39,6 +39,10 @@ func deleteFileTool() *Tool {
 				return "", fmt.Errorf("invalid arguments for delete_file: %w", err)
 			}
 
+			if isSourceControlPath(args.RelativePath) {
+				return "", sourceControlPathError(args.RelativePath)
+			}
+
 			toolString := fmt.Sprintf("delete_file(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &wire.ToolMessage{Tool: toolString},
