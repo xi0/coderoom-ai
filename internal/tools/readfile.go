@@ -39,6 +39,10 @@ func readFileTool() *Tool {
 				return "", fmt.Errorf("invalid arguments for read_file: %w", err)
 			}
 
+			if isSourceControlPath(args.RelativePath) {
+				return "", sourceControlPathError(args.RelativePath)
+			}
+
 			toolString := fmt.Sprintf("read_file(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &wire.ToolMessage{Tool: toolString},

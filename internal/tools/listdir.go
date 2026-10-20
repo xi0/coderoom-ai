@@ -44,6 +44,10 @@ func listDirTool() *Tool {
 				args.RelativePath = "."
 			}
 
+			if isSourceControlPath(args.RelativePath) {
+				return "", sourceControlPathError(args.RelativePath)
+			}
+
 			toolString := fmt.Sprintf("list_dir(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &wire.ToolMessage{Tool: toolString},
@@ -66,12 +70,21 @@ func listDirTool() *Tool {
 
 			var result []string
 			for _, entry := range entries {
+				if isSourceControlName(entry.Name()) {
+					continue
+				}
+
 				kind := "file"
 				if entry.IsDir() {
 					kind = "dir"
 				}
 				result = append(result, fmt.Sprintf("%s (%s)", entry.Name(), kind))
 			}
+
+			if len(result) == 0 {
+				return "", fmt.Errorf("directory is empty")
+			}
+
 			return strings.Join(result, "\n"), nil
 		},
 	}

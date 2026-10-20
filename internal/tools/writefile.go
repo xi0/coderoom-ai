@@ -47,6 +47,10 @@ func writeFileTool() *Tool {
 				return "", fmt.Errorf("invalid arguments for write_file: %w", err)
 			}
 
+			if isSourceControlPath(args.RelativePath) {
+				return "", sourceControlPathError(args.RelativePath)
+			}
+
 			toolString := fmt.Sprintf("write_file(%q)", args.RelativePath)
 			options.WriteChannel <- wire.BackendMessage{
 				ToolMessage: &wire.ToolMessage{Tool: toolString},
