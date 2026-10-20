@@ -130,11 +130,11 @@ func (s *Settings) loadGlobal() error {
 	defer s.mu.Unlock()
 
 	if _, err := os.Stat(s.SettingsDir); os.IsNotExist(err) {
-		err := os.MkdirAll(s.SettingsDir, 0755)
-		if err != nil {
+		if err := os.MkdirAll(s.SettingsDir, 0755); err != nil {
 			return err
 		}
-		return nil
+		// Fall through: the directory is now empty, so the ReadFile below
+		// hits os.IsNotExist and initializes the default settings.
 	} else if err != nil {
 		return err
 	}
@@ -171,6 +171,12 @@ func (s *Settings) loadGlobal() error {
 func (s *Settings) saveGlobal() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	// Guard against persisting an uninitialized struct, which would otherwise
+	// be marshaled to the JSON literal "null".
+	if s.global == nil {
+		return fmt.Errorf("saveGlobal(): global settings not initialized")
+	}
 
 	data, err := json.Marshal(s.global)
 	if err != nil {
