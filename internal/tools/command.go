@@ -59,6 +59,9 @@ func commandTool(name, description string, tool *wire.ToolSettings) *Tool {
 
 			cmd := exec.Command("bash", "-c", fmt.Sprintf("cd %q && %s", options.Root.Name(), tool.Command))
 			output, err := cmd.CombinedOutput()
+			if len(output) == 0 {
+				output = []byte("(no output from command)")
+			}
 			return string(output), err
 		},
 	}
