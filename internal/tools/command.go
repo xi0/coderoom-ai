@@ -2,6 +2,7 @@ package tools
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 
@@ -59,10 +60,25 @@ func commandTool(name, description string, tool *wire.ToolSettings) *Tool {
 
 			cmd := exec.Command("bash", "-c", fmt.Sprintf("cd %q && %s", options.Root.Name(), tool.Command))
 			output, err := cmd.CombinedOutput()
+
+			exitCode := 0
+			if err != nil {
+				// A failing command is not an error of the tool: the exit code
+				// is reported together with the output instead. Only a command
+				// that could not be started at all (e.g. bash is not installed)
+				// is treated as a tool error.
+				var exitErr *exec.ExitError
+				if !errors.As(err, &exitErr) {
+					return "", err
+				}
+				exitCode = exitErr.ExitCode()
+			}
+
 			if len(output) == 0 {
 				output = []byte("(no output from command)")
 			}
-			return string(output), err
+
+			return fmt.Sprintf("exit code: %d\n\n%s", exitCode, output), nil
 		},
 	}
 }

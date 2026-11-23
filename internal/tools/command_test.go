@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -87,8 +88,8 @@ func TestCommandToolExecutesCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "hello\n" {
-		t.Errorf("Expected output %q, got %q", "hello\n", result)
+	if want := "exit code: 0\n\nhello\n"; result != want {
+		t.Errorf("Expected output %q, got %q", want, result)
 	}
 }
 
@@ -120,7 +121,8 @@ func TestCommandToolWorkingDirectoryIsRoot(t *testing.T) {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
 
-	got := strings.TrimSpace(result)
+	_, body := commandOutput(t, result)
+	got := strings.TrimSpace(body)
 	resolvedWant := resolvePath(t, tmpDir)
 	if resolvePath(t, got) != resolvedWant {
 		t.Errorf("Expected command working directory %q, got %q", tmpDir, got)
@@ -184,7 +186,7 @@ func TestCommandToolMultilineOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	want := "line1\nline2\nline3\n"
+	want := "exit code: 0\n\nline1\nline2\nline3\n"
 	if result != want {
 		t.Errorf("Expected output %q, got %q", want, result)
 	}
@@ -199,8 +201,8 @@ func TestCommandToolEmptyOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "" {
-		t.Errorf("Expected empty output, got %q", result)
+	if want := "exit code: 0\n\n(no output from command)"; result != want {
+		t.Errorf("Expected output %q, got %q", want, result)
 	}
 }
 
@@ -214,8 +216,8 @@ func TestCommandToolIgnoresArguments(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "ok\n" {
-		t.Errorf("Expected output %q, got %q", "ok\n", result)
+	if want := "exit code: 0\n\nok\n"; result != want {
+		t.Errorf("Expected output %q, got %q", want, result)
 	}
 }
 
@@ -224,17 +226,14 @@ func TestCommandToolCommandFailure(t *testing.T) {
 	options, _, _ := commandTestOptions(t)
 
 	tool := commandTool("run_tests", "Runs all the tests for the project.", &wire.ToolSettings{Command: "exit 3"})
-	_, err := tool.call("{}", options)
-	if err == nil {
-		t.Fatal("Expected error for failing command, got nil")
+	result, err := tool.call("{}", options)
+	if err != nil {
+		t.Fatalf("Expected no error for a failing command, got: %v", err)
 	}
 
-	var exitErr *exec.ExitError
-	if !errors.As(err, &exitErr) {
-		t.Fatalf("Expected *exec.ExitError, got %T: %v", err, err)
-	}
-	if exitErr.ExitCode() != 3 {
-		t.Errorf("Expected exit code 3, got %d", exitErr.ExitCode())
+	exitCode, _ := commandOutput(t, result)
+	if exitCode != 3 {
+		t.Errorf("Expected exit code 3, got %d", exitCode)
 	}
 }
 
@@ -242,13 +241,21 @@ func TestCommandToolReturnsOutputOnFailure(t *testing.T) {
 	requireBash(t)
 	options, _, _ := commandTestOptions(t)
 
-	tool := commandTool("build_project", "Builds the project.", &wire.ToolSettings{Command: "echo before-failure; exit 1"})
+	tool := commandTool("build_project", "Builds the project.", &wire.ToolSettings{Command: "echo before-failure; echo failure-detail 1>&2; exit 1"})
 	result, err := tool.call("{}", options)
-	if err == nil {
-		t.Fatal("Expected error for failing command, got nil")
+	if err != nil {
+		t.Fatalf("Expected no error for a failing command, got: %v", err)
 	}
-	if !strings.Contains(result, "before-failure") {
-		t.Errorf("Expected output to be returned on failure, got %q", result)
+
+	exitCode, body := commandOutput(t, result)
+	if exitCode != 1 {
+		t.Errorf("Expected exit code 1, got %d", exitCode)
+	}
+	if !strings.Contains(body, "before-failure") {
+		t.Errorf("Expected output to contain stdout of the failing command, got %q", body)
+	}
+	if !strings.Contains(body, "failure-detail") {
+		t.Errorf("Expected output to contain stderr of the failing command, got %q", body)
 	}
 }
 
@@ -256,14 +263,68 @@ func TestCommandToolNonExistentCommand(t *testing.T) {
 	requireBash(t)
 	options, _, _ := commandTestOptions(t)
 
+	// bash itself starts and reports the missing command, so this is a normal
+	// run with a non-zero exit code rather than a tool error.
 	tool := commandTool("build_project", "Builds the project.", &wire.ToolSettings{Command: "definitely-not-a-real-command-xyz"})
 	result, err := tool.call("{}", options)
+	if err != nil {
+		t.Fatalf("Expected no error for a command run by bash, got: %v", err)
+	}
+
+	exitCode, body := commandOutput(t, result)
+	if exitCode != 127 {
+		t.Errorf("Expected exit code 127, got %d", exitCode)
+	}
+	if !strings.Contains(body, "definitely-not-a-real-command-xyz") {
+		t.Errorf("Expected bash error output to be returned, got %q", body)
+	}
+}
+
+// TestCommandToolExecutableNotFound verifies that a tool error is returned when
+// the command cannot be started at all, in contrast to a command that runs and
+// exits with a non-zero status.
+func TestCommandToolExecutableNotFound(t *testing.T) {
+	// Emptying PATH makes exec.Command fail to resolve bash.
+	t.Setenv("PATH", "")
+
+	options, _, _ := commandTestOptions(t)
+
+	tool := commandTool("build_project", "Builds the project.", &wire.ToolSettings{Command: "echo hello"})
+	result, err := tool.call("{}", options)
 	if err == nil {
-		t.Fatal("Expected error for non-existent command, got nil")
+		t.Fatalf("Expected an error when the executable cannot be found, got output %q", result)
 	}
-	if result == "" {
-		t.Error("Expected bash error output to be returned")
+
+	var execErr *exec.Error
+	if !errors.As(err, &execErr) {
+		t.Fatalf("Expected *exec.Error, got %T: %v", err, err)
 	}
+	if result != "" {
+		t.Errorf("Expected no output when the executable cannot be found, got %q", result)
+	}
+}
+
+// commandOutput splits a command tool result of the form
+// "exit code: <code>\n\n<output>" into the exit code and the output body.
+func commandOutput(t *testing.T, result string) (int, string) {
+	t.Helper()
+
+	const prefix = "exit code: "
+	if !strings.HasPrefix(result, prefix) {
+		t.Fatalf("Expected result to start with %q, got %q", prefix, result)
+	}
+
+	codeString, body, ok := strings.Cut(result[len(prefix):], "\n\n")
+	if !ok {
+		t.Fatalf("Expected exit code and output to be separated by a blank line, got %q", result)
+	}
+
+	exitCode, err := strconv.Atoi(codeString)
+	if err != nil {
+		t.Fatalf("Expected an integer exit code in %q: %v", result, err)
+	}
+
+	return exitCode, body
 }
 
 // resolvePath returns the symlink-resolved absolute form of path, falling back
@@ -379,8 +440,8 @@ func TestCommandToolSendsBlockedMessageForModifiedBlockingFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "" {
-		t.Errorf("Expected empty output, got %q", result)
+	if want := "exit code: 0\n\n(no output from command)"; result != want {
+		t.Errorf("Expected output %q, got %q", want, result)
 	}
 
 	requireToolMessage(t, writeChannel, "build_project()")
@@ -578,8 +639,8 @@ func TestCommandToolNoBlockWhenModifiedFileDoesNotMatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "ok\n" {
-		t.Errorf("Expected output %q, got %q", "ok\n", result)
+	if want := "exit code: 0\n\nok\n"; result != want {
+		t.Errorf("Expected output %q, got %q", want, result)
 	}
 
 	requireToolMessage(t, writeChannel, "build_project()")
@@ -730,8 +791,8 @@ func TestCommandToolNoBlockWithoutEdits(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
-	if result != "ok\n" {
-		t.Errorf("Expected output %q, got %q", "ok\n", result)
+	if want := "exit code: 0\n\nok\n"; result != want {
+		t.Errorf("Expected output %q, got %q", want, result)
 	}
 
 	requireToolMessage(t, writeChannel, "build_project()")

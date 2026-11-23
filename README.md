@@ -88,8 +88,8 @@ The agent can call the following tools:
 | `propose_plan` | Proposes a plan to the user and returns whether the user wishes to proceed. |
 | `present_options` | Presents a list of options to the user and returns the selected option. |
 | `report_progress` | Reports the current work in progress with an optional completion percentage. |
-| `build_project` | Runs the project's configured build command. Only available when configured (see [Project Configuration](#project-configuration-coderoom-aijson)). |
-| `run_tests` | Runs the project's configured test command. Only available when configured. |
+| `build_project` | Runs the project's configured build command. Only available when configured (see [Project Configuration](#project-configuration-coderoom-aijson)). The result reports the exit code together with the combined stdout/stderr; a non-zero exit code is a normal result, and the tool only fails if the command cannot be started at all. |
+| `run_tests` | Runs the project's configured test command. Only available when configured. Reports its result the same way as `build_project`. |
 
 The *mutating* tools (`write_file`, `edit_file`, `delete_file`, `grep`) and the two command tools are only offered to the model when the UI is in modification mode; `list_dir`, `read_file`, `propose_plan`, `present_options` and `report_progress` are always available. In inspection mode the model can therefore still explore the project.
 
