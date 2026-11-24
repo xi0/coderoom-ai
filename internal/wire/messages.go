@@ -61,6 +61,7 @@ type InitMessage struct {
 	Modifications bool               `json:"modifications"`
 	DarkTheme     bool               `json:"dark_theme"`
 	Verbosity     string             `json:"verbosity"`
+	SubmitHotkey  string             `json:"submit_hotkey"`
 	ProjectName   string             `json:"project_name"`
 	ProjectDir    string             `json:"project_dir"`
 	Providers     []ProviderSettings `json:"providers"`
@@ -130,12 +131,32 @@ func ValidVerbosity(v string) bool {
 	}
 }
 
+// Submit hotkeys control which key combination submits the prompt. The other
+// combination inserts a newline into the prompt input.
+const (
+	// SubmitHotkeyEnter submits with Enter; Shift+Enter inserts a newline.
+	SubmitHotkeyEnter = "enter"
+	// SubmitHotkeyCtrlEnter submits with Ctrl+Enter; Enter inserts a newline.
+	SubmitHotkeyCtrlEnter = "ctrl_enter"
+)
+
+// ValidSubmitHotkey reports whether v is a known submit hotkey.
+func ValidSubmitHotkey(v string) bool {
+	switch v {
+	case SubmitHotkeyEnter, SubmitHotkeyCtrlEnter:
+		return true
+	default:
+		return false
+	}
+}
+
 type GlobalSettings struct {
 	Version              int                `json:"version"`
 	AutoOpen             *string            `json:"auto_open,omitempty"`
 	DefaultModifications bool               `json:"default_modifications"`
 	DarkTheme            bool               `json:"dark_theme"`
 	Verbosity            string             `json:"verbosity"`
+	SubmitHotkey         string             `json:"submit_hotkey"`
 	AllowedDirs          []string           `json:"allowed_dirs"`
 	Providers            []ProviderSettings `json:"providers"`
 }

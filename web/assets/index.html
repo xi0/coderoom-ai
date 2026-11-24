@@ -78,7 +78,7 @@
       <div class="input-area">
         <div id="context-usage" class="context-usage hidden" title=""></div>
         <div class="input-wrapper">
-          <textarea id="prompt-input" rows="1" placeholder="Type your prompt here..." disabled></textarea>
+          <textarea id="prompt-input" rows="1" placeholder="Type your prompt here... Enter submits, Shift+Enter adds a newline" disabled></textarea>
           <button id="send-btn" class="send-btn" aria-label="Send">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
@@ -113,6 +113,14 @@
           <option value="minimal">Minimal</option>
           <option value="medium" selected>Medium</option>
           <option value="high">High</option>
+        </select>
+      </div>
+
+      <div class="settings-section">
+        <h3>Submit hotkey</h3>
+        <select id="submit-hotkey-select">
+          <option value="enter" selected>Enter submits, Shift+Enter adds a newline</option>
+          <option value="ctrl_enter">Ctrl+Enter submits, Enter adds a newline</option>
         </select>
       </div>
 

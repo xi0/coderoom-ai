@@ -59,6 +59,7 @@ You can use the following keywords to test different message types in the UI.
 			Modifications: be.Settings.GetDefaultModifications(),
 			DarkTheme:     be.Settings.GetDarkTheme(),
 			Verbosity:     be.Settings.GetVerbosity(),
+			SubmitHotkey:  be.Settings.GetSubmitHotkey(),
 			ProjectName:   be.Settings.GetProjectName(),
 			ProjectDir:    be.Settings.ProjectDir,
 			Providers:     be.Settings.GetProviders(),

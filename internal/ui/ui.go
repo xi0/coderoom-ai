@@ -22,6 +22,11 @@ var (
 	onlyWhiteSpace       = regexp.MustCompile("^\\s*$")
 	providerModelMatch   = regexp.MustCompile("^([0-9]+)/([0-9]+)$")
 	providerModelIDMatch = regexp.MustCompile("^([^/]+)/([^/]+)$")
+
+	// submitHotkey holds the currently active key combination that submits the
+	// prompt. It is applied when the settings are loaded and updated whenever
+	// the global settings are saved.
+	submitHotkey = wire.SubmitHotkeyEnter
 )
 
 func butterbar(message string, isSuccess bool) {
@@ -74,6 +79,11 @@ func init() {
 
 	promptInput := doc.GetElementByID("prompt-input")
 	promptInput.AddInputHandler(adjustPromptHeight)
+	promptInput.AddKeyDownHandler(handlePromptKeyDown)
+
+	// Show the default submit hotkey in the prompt placeholder until the
+	// backend reports the configured hotkey.
+	applySubmitHotkey(wire.SubmitHotkeyEnter)
 
 	sendButton := doc.GetElementByID("send-btn")
 	sendButton.AddClickHandler(submitPrompt)
@@ -225,6 +235,53 @@ func applyVerbosity(verbosity string) {
 	documentElement.AddClass("verbosity-" + verbosity)
 }
 
+// Prompt placeholder texts that mention the hotkeys active in each mode.
+const (
+	promptPlaceholderEnter     = "Type your prompt here... Enter submits, Shift+Enter adds a newline"
+	promptPlaceholderCtrlEnter = "Type your prompt here... Ctrl+Enter submits, Enter adds a newline"
+)
+
+// applySubmitHotkey actuates the configured submit hotkey by storing it for the
+// key handler and mentioning it in the prompt placeholder, so the user can see
+// which combination submits and which one adds a newline.
+func applySubmitHotkey(hotkey string) {
+	if !wire.ValidSubmitHotkey(hotkey) {
+		hotkey = wire.SubmitHotkeyEnter
+	}
+
+	submitHotkey = hotkey
+
+	placeholder := promptPlaceholderEnter
+	if hotkey == wire.SubmitHotkeyCtrlEnter {
+		placeholder = promptPlaceholderCtrlEnter
+	}
+
+	prompt := browser.Document().GetElementByID("prompt-input")
+	prompt.SetAttribute("placeholder", placeholder)
+}
+
+// handlePromptKeyDown submits the prompt when the configured submit hotkey is
+// pressed and leaves all other key presses (including the newline combination)
+// to the textarea.
+func handlePromptKeyDown(this, e *browser.Object) any {
+	if e.Key() != "Enter" {
+		return nil
+	}
+
+	var submit bool
+	if submitHotkey == wire.SubmitHotkeyCtrlEnter {
+		submit = e.CtrlKey()
+	} else {
+		submit = !e.ShiftKey()
+	}
+
+	if !submit {
+		return nil
+	}
+
+	return submitPrompt(this, e)
+}
+
 func toggleSettings(this, e *browser.Object) any {
 	e.StopPropagation()
 
@@ -309,6 +366,14 @@ func loadGlobalSettings() {
 		verbositySelect.SetValue(wire.VerbosityMedium)
 	}
 
+	// Set submit hotkey
+	submitHotkeySelect := doc.GetElementByID("submit-hotkey-select")
+	if wire.ValidSubmitHotkey(settings.SubmitHotkey) {
+		submitHotkeySelect.SetValue(settings.SubmitHotkey)
+	} else {
+		submitHotkeySelect.SetValue(wire.SubmitHotkeyEnter)
+	}
+
 	// Render providers
 	renderProviders(settings.Providers)
 
@@ -337,6 +402,12 @@ func saveGlobalSettings(this, e *browser.Object) any {
 		verbosity = wire.VerbosityMedium
 	}
 
+	// Get submit hotkey
+	submitHotkeyValue := doc.GetElementByID("submit-hotkey-select").GetValue()
+	if !wire.ValidSubmitHotkey(submitHotkeyValue) {
+		submitHotkeyValue = wire.SubmitHotkeyEnter
+	}
+
 	// Get dark theme from document element
 	documentElement := browser.DocumentElement()
 	theme := documentElement.GetAttribute("data-theme")
@@ -357,6 +428,7 @@ func saveGlobalSettings(this, e *browser.Object) any {
 		DefaultModifications: defaultModifications,
 		DarkTheme:            darkTheme,
 		Verbosity:            verbosity,
+		SubmitHotkey:         submitHotkeyValue,
 		Providers:            providers,
 		AllowedDirs:          allowedDirs,
 	}
@@ -383,6 +455,7 @@ func saveGlobalSettings(this, e *browser.Object) any {
 			butterbar("Global settings saved", true)
 			dialog.Close()
 			applyVerbosity(verbosity)
+			applySubmitHotkey(submitHotkeyValue)
 			populateProviderModelSelect(&providers)
 		} else {
 			butterbar("Global settings NOT saved", false)
@@ -855,6 +928,7 @@ func handleInit(message *wire.InitMessage) {
 	}
 
 	applyVerbosity(message.Verbosity)
+	applySubmitHotkey(message.SubmitHotkey)
 
 	name := doc.GetElementByID("project-name")
 	name.TextContent(message.ProjectName)

@@ -5,7 +5,67 @@ import (
 	"path/filepath"
 	"sort"
 	"testing"
+
+	"github.com/xi0/coderoom-ai/internal/wire"
 )
+
+// TestLoadGlobalSubmitHotkey verifies that the submit hotkey defaults to Enter
+// when it is missing or unknown, and that configured values survive loading.
+func TestLoadGlobalSubmitHotkey(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string // empty means that no global.json is written
+		want    string
+	}{
+		{
+			name:    "missing file",
+			content: "",
+			want:    wire.SubmitHotkeyEnter,
+		},
+		{
+			name:    "missing field",
+			content: `{"verbosity": "medium"}`,
+			want:    wire.SubmitHotkeyEnter,
+		},
+		{
+			name:    "unknown value",
+			content: `{"submit_hotkey": "alt_enter"}`,
+			want:    wire.SubmitHotkeyEnter,
+		},
+		{
+			name:    "enter",
+			content: `{"submit_hotkey": "enter"}`,
+			want:    wire.SubmitHotkeyEnter,
+		},
+		{
+			name:    "ctrl enter",
+			content: `{"submit_hotkey": "ctrl_enter"}`,
+			want:    wire.SubmitHotkeyCtrlEnter,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+
+			if tt.content != "" {
+				fileName := filepath.Join(dir, "global.json")
+				if err := os.WriteFile(fileName, []byte(tt.content), 0600); err != nil {
+					t.Fatalf("Failed to write global.json: %v", err)
+				}
+			}
+
+			settings := &Settings{SettingsDir: dir, ProjectDir: dir}
+			if err := settings.loadGlobal(); err != nil {
+				t.Fatalf("loadGlobal(): %v", err)
+			}
+
+			if got := settings.GetSubmitHotkey(); got != tt.want {
+				t.Errorf("GetSubmitHotkey() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestMatchingFiles(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "blockingfiles_test_*")

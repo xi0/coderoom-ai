@@ -175,6 +175,7 @@ The external dependencies are intentionally few:
 - **Changed files list** — after each completed turn the files touched in the session are listed together with the action taken on them (entire file, modified, deleted). Clicking a modified file opens a dialog with a colorized unified diff; new files are shown in full.
 - **Context usage indicator** — labeled "Context window used: N%" showing the percentage of the model's context window used in the current session. It sits in the unused area to the left of the prompt input (in the page gutter) without shrinking the prompt, and moves below the prompt on small screens. Its background doubles as a progress bar that fills up to the used percentage (capped at 100%), and once usage reaches 90% the bar and the label turn red to warn that the context window is nearly exhausted. Hovering the indicator reveals the used and limit token counts.
 - **Plans, options and blocked actions** — `propose_plan`, `present_options` and blocked command tools all render as messages with explicit buttons, so the agent can ask a question without a free form confirmation prompt.
+- **Prompt submit hotkey** — configurable in Global Settings. Either *Enter submits, Shift+Enter adds a newline* (the default) or *Ctrl+Enter submits, Enter adds a newline*. The prompt placeholder always mentions the hotkeys that are currently active.
 
 ### Test mode
 
@@ -230,6 +231,7 @@ Global settings are edited in the *Global Settings* dialog and stored in `~/.con
   "default_modifications": true,
   "dark_theme": true,
   "verbosity": "medium",
+  "submit_hotkey": "enter",
   "allowed_dirs": ["/home/user/my/project"],
   "providers": [
     {
@@ -248,6 +250,7 @@ Global settings are edited in the *Global Settings* dialog and stored in `~/.con
 | `default_modifications` | Whether new sessions start in modification mode. |
 | `dark_theme` | Whether the dark theme is active. |
 | `verbosity` | One of `minimal`, `medium` or `high`. Controls how much detail is shown in the conversation; tool messages are hidden at `minimal` and reasoning messages are only shown at `high`. Unknown values fall back to `medium`. |
+| `submit_hotkey` | One of `enter` (Enter submits, Shift+Enter adds a newline — the default) or `ctrl_enter` (Ctrl+Enter submits, Enter adds a newline). Unknown values fall back to `enter`. |
 | `allowed_dirs` | Project directories the user has allowed. Removing an entry makes the next session ask again. |
 | `providers` | Configured provider/model entries. `default` marks the provider used when no specific one is selected; API keys are never sent back to the browser. |
 
@@ -372,7 +375,7 @@ The project includes unit tests for:
 - The `build_project` and `run_tests` command tools, including blocking file behaviour
 - Source control path protection
 - Plan proposal, option presentation and progress reporting
-- Context window usage percentage calculation (`internal/wire`)
+- Context window usage percentage calculation and submit hotkey validation (`internal/wire`)
 - Blocking file pattern matching (`internal/blockingfiles`), and testing a pattern against a project directory (`internal/backend`)
 
 ### Adding Tests

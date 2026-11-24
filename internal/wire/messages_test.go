@@ -2,6 +2,25 @@ package wire
 
 import "testing"
 
+func TestValidSubmitHotkey(t *testing.T) {
+	tests := []struct {
+		hotkey string
+		want   bool
+	}{
+		{hotkey: SubmitHotkeyEnter, want: true},
+		{hotkey: SubmitHotkeyCtrlEnter, want: true},
+		{hotkey: "", want: false},
+		{hotkey: "Enter", want: false},
+		{hotkey: "shift_enter", want: false},
+	}
+
+	for _, tt := range tests {
+		if got := ValidSubmitHotkey(tt.hotkey); got != tt.want {
+			t.Errorf("ValidSubmitHotkey(%q) = %t, want %t", tt.hotkey, got, tt.want)
+		}
+	}
+}
+
 func TestContextUsagePercent(t *testing.T) {
 	tests := []struct {
 		name  string
