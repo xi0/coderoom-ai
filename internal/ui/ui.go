@@ -947,10 +947,13 @@ func handleUpdateProgress(message *wire.ProgressMessage) {
 	text.TextContent(message.Text)
 }
 
-// handleContextUsage updates the context window usage indicator in the lower
-// left of the input area. The percentage is shown directly and the token counts
-// (used and limit) are exposed through the element's title, which browsers show
-// on hover.
+// handleContextUsage updates the context window usage indicator. The label
+// shows the used percentage and the background is driven by the
+// --context-usage-progress custom property, which acts as a progress bar. The
+// fill is clamped to 100% so that usage beyond the context window does not
+// overflow the bar, while the label still reports the real percentage. The
+// token counts (used and limit) are exposed through the element's title, which
+// browsers show on hover.
 func handleContextUsage(usage *wire.ContextUsage) {
 	if usage == nil || usage.Limit <= 0 {
 		return
@@ -960,7 +963,17 @@ func handleContextUsage(usage *wire.ContextUsage) {
 	indicator := doc.GetElementByID("context-usage")
 
 	percent := usage.Percent()
-	indicator.TextContent(fmt.Sprintf("%d%%", percent))
+
+	fill := percent
+	if fill < 0 {
+		fill = 0
+	}
+	if fill > 100 {
+		fill = 100
+	}
+
+	indicator.TextContent(fmt.Sprintf("Context window used: %d%%", percent))
+	indicator.Style().SetProperty("--context-usage-progress", fmt.Sprintf("%d%%", fill))
 	indicator.SetAttribute("title", fmt.Sprintf(
 		"Context usage: %d / %d tokens (%d%%)",
 		usage.Used,

@@ -173,7 +173,7 @@ The external dependencies are intentionally few:
 - **Theme toggle** — switches between the dark and light theme; the choice is persisted.
 - **Settings menu** — opens the Global Settings and Project Settings dialogs.
 - **Changed files list** — after each completed turn the files touched in the session are listed together with the action taken on them (entire file, modified, deleted). Clicking a modified file opens a dialog with a colorized unified diff; new files are shown in full.
-- **Context usage indicator** — shows the percentage of the model's context window used in the current session, in the lower left of the input area (left of the prompt, or below it on small screens). Hovering the indicator reveals the used and limit token counts.
+- **Context usage indicator** — labeled "Context window used: N%" showing the percentage of the model's context window used in the current session. It sits in the unused area to the left of the prompt input (in the page gutter) without shrinking the prompt, and moves below the prompt on small screens. Its background doubles as a progress bar that fills up to the used percentage (capped at 100%). Hovering the indicator reveals the used and limit token counts.
 - **Plans, options and blocked actions** — `propose_plan`, `present_options` and blocked command tools all render as messages with explicit buttons, so the agent can ask a question without a free form confirmation prompt.
 
 ### Test mode

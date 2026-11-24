@@ -18,6 +18,7 @@
   --diff-file-fg: #a0a0a0;
   --scrollbar-thumb: rgba(255, 255, 255, 0.20);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
+  --context-usage-bar-color: rgba(59, 130, 246, 0.45);
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -41,6 +42,7 @@
   --diff-file-fg: #6c757d;
   --scrollbar-thumb: rgba(0, 0, 0, 0.20);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
+  --context-usage-bar-color: rgba(37, 99, 235, 0.25);
 }
 
 * {
@@ -903,8 +905,11 @@ html, body {
 
 /* The input area holds the context usage indicator (on the left) and the prompt
  * wrapper (on the right). It is centered and capped to the same width as the
- * conversation so that it lines up with the messages above. */
+ * conversation so that it lines up with the messages above. It is the
+ * positioning context for the context usage indicator, which is placed in the
+ * unused area to the left of the prompt rather than taking space from it. */
 .input-area {
+  position: relative;
   width: 100%;
   max-width: 1200px;
   display: flex;
@@ -924,22 +929,39 @@ html, body {
   gap: 8px;
 }
 
-/* Context window usage indicator. It sits at the lower left, just left of the
- * prompt input, and is bottom-aligned so it stays in the corner as the input
- * grows. The percentage is shown directly; the used/limit token counts are
- * exposed via the title attribute (browser tooltip on hover). */
+/* Context window usage indicator. It is absolutely positioned in the unused
+ * area to the left of the prompt input (in the page gutter left of the centered
+ * input area) and bottom-aligned, so it stays in the corner as the input grows
+ * without shrinking the prompt. The label shows the used percentage; the
+ * used/limit token counts are exposed via the title attribute (browser tooltip
+ * on hover).
+ *
+ * The background acts as a progress bar: the bar color fills from the left up
+ * to --context-usage-progress (set from Go, clamped to 100%) and the track
+ * color fills the remainder. The custom property defaults to 0% so the bar is
+ * empty until usage is reported. */
 .context-usage {
-  flex: 0 0 auto;
-  align-self: flex-end;
-  padding: 4px 8px;
+  position: absolute;
+  right: calc(100% + 12px);
+  bottom: 0;
+  min-width: 190px;
+  padding: 6px 12px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background-color: var(--bg-tertiary);
-  color: var(--text-secondary);
+  background-image: linear-gradient(
+    to right,
+    var(--context-usage-bar-color) 0%,
+    var(--context-usage-bar-color) var(--context-usage-progress, 0%),
+    transparent var(--context-usage-progress, 0%),
+    transparent 100%
+  );
+  color: var(--text-primary);
   font-family: monospace;
   font-size: 0.75rem;
   line-height: 1.2;
   white-space: nowrap;
+  text-align: center;
   cursor: default;
   user-select: none;
 }
@@ -1486,7 +1508,8 @@ dialog::backdrop {
   }
 
   /* On small screens the context usage indicator moves below the prompt
-   * instead of sitting beside it. */
+   * instead of sitting beside it. Turning off the absolute positioning returns
+   * it to the normal flex flow, and order: 1 places it after the prompt. */
   .input-area {
     flex-direction: column;
     align-items: stretch;
@@ -1494,8 +1517,10 @@ dialog::backdrop {
   }
 
   .context-usage {
+    position: static;
     order: 1;
     align-self: flex-start;
+    min-width: 0;
   }
 }
 
