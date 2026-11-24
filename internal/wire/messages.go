@@ -10,6 +10,7 @@ type FrontendMessage struct {
 	Prompt       *PromptMessage `json:"prompt,omitempty"`
 	ChosenOption *int           `json:"chosen_option,omitempty"`
 	Confirmation *bool          `json:"confirmation,omitempty"`
+	Retry        *bool          `json:"retry,omitempty"`
 }
 
 type PromptMessage struct {
@@ -27,6 +28,7 @@ type BackendMessage struct {
 	AllowDirMessage  *string          `json:"allow_dir,omitempty"`
 	SystemMessage    *string          `json:"system_message,omitempty"`
 	ReasoningMessage *string          `json:"reasoning_message,omitempty"`
+	ErrorMessage     *ErrorMessage    `json:"error_message,omitempty"`
 	ToolMessage      *ToolMessage     `json:"tool_message,omitempty"`
 	ProposalMessage  *string          `json:"proposal_message,omitempty"`
 	OptionsMessage   *OptionsMessage  `json:"options_message,omitempty"`
@@ -36,6 +38,13 @@ type BackendMessage struct {
 	ContextUsage     *ContextUsage    `json:"context_usage,omitempty"`
 	WorkDone         bool             `json:"work_done"`
 	EnablePrompt     bool             `json:"enable_prompt"`
+}
+
+// ErrorMessage reports a failure, such as an API call that could not be
+// completed. The frontend renders it together with a "Retry" button that lets
+// the user retry the failed operation.
+type ErrorMessage struct {
+	Text string `json:"text,omitempty"`
 }
 
 // ContextUsage describes how much of the model's context window is used in the

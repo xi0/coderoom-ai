@@ -127,6 +127,7 @@ func initDone() {
 			AllowDirMessage:  handleAllowDirMessage,
 			SystemMessage:    handleSystemMessage,
 			ReasoningMessage: handleReasoningMessage,
+			ErrorMessage:     handleErrorMessage,
 			ToolMessage:      handleToolMessage,
 			ProposalMessage:  handleProposalMessage,
 			OptionsMessage:   handleOptionsMessage,
@@ -976,6 +977,18 @@ func handleSystemMessage(markdown string) {
 
 func handleReasoningMessage(markdown string) {
 	addMessage(reasoningMessage(markdown))
+}
+
+func handleErrorMessage(message *wire.ErrorMessage) {
+	addMessage(errorMessage(message.Text, sendRetry))
+}
+
+func sendRetry() {
+	retry := true
+
+	webSocket.Send(wire.FrontendMessage{
+		Retry: &retry,
+	})
 }
 
 func handleToolMessage(message *wire.ToolMessage) {

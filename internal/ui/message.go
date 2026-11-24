@@ -192,6 +192,68 @@ func userMessage(markdown string) *b.Object {
 	)
 }
 
+// errorMessage renders a failure (e.g. a failed API call) together with a
+// "Retry" button that invokes retry when clicked.
+func errorMessage(text string, retry func()) *b.Object {
+	retryButton := b.Button(
+		[]string{"plan-btn", "error-btn-retry"},
+		b.Text("Retry"),
+	)
+
+	retryButton.AddClickHandler(func(this, e *b.Object) any {
+		e.PreventDefault()
+		errorMessageDone(this)
+		go retry()
+		return nil
+	})
+
+	return b.Div(
+		[]string{"message", "system-message", "error-message"},
+		b.Div(
+			[]string{"message-content"},
+			b.H3(
+				b.Text("⚠️ Error"),
+			),
+			b.P(
+				b.Text(text),
+			),
+			b.Div(
+				[]string{"error-actions"},
+				retryButton,
+			),
+		),
+	)
+}
+
+// errorMessageDone replaces the Retry button with a status text and restores
+// the working indicator, mirroring how the other interactive messages mark
+// themselves as answered.
+func errorMessageDone(button *b.Object) {
+	doc := b.Document()
+	message := button.ClosestByClassName("error-message")
+
+	actions := message.GetElementsByClassName("error-actions")[0]
+	buttons := actions.GetElementsByTagName("button")
+	for _, b := range buttons {
+		b.Disabled(true)
+	}
+
+	actions.RemoveChildren()
+	actions.Append(b.P(
+		b.Text("Retrying..."),
+	))
+
+	progress := doc.GetElementByID("working-progress")
+	progress.Style().Width(fmt.Sprintf("%d%%", 0))
+
+	workingMessage := doc.GetElementByID("working-message")
+	textElement := workingMessage.GetElementsByClassName("message-text")[0]
+	textElement.TextContent("Working...")
+
+	workingMessage.RemoveClass("hidden")
+	workingMessage.ScrollIntoView()
+}
+
 func toolMessage(message *wire.ToolMessage) *b.Object {
 	// When a tool message provides a MultipleFmt, consecutive calls to the same
 	// tool are collapsed into the previous message by showing a counter pill

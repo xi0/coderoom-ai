@@ -81,7 +81,8 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 	promptChannel := make(chan wire.PromptMessage)
 	optionChannel := make(chan int)
 	confirmationChannel := make(chan bool)
-	go be.agentLoop(writeChannel, promptChannel, optionChannel, confirmationChannel, sessionID)
+	retryChannel := make(chan struct{}, 1)
+	go be.agentLoop(writeChannel, promptChannel, optionChannel, confirmationChannel, retryChannel, sessionID)
 
 	for message := range readChannel {
 		switch state {
@@ -118,6 +119,15 @@ func (be *OpenAI) chat(writeChannel chan wire.BackendMessage, readChannel chan w
 			if message.Confirmation != nil {
 				confirmationChannel <- *message.Confirmation
 			}
+			if message.Retry != nil && *message.Retry {
+				// Wake the agent loop so that it retries the failed request.
+				// The send is non-blocking so that a stray retry request cannot
+				// stall the message loop when no retry is expected.
+				select {
+				case retryChannel <- struct{}{}:
+				default:
+				}
+			}
 		}
 	}
 }
@@ -145,7 +155,7 @@ func (be *OpenAI) client(providerID, modelID string) (*openai.Client, *wire.Prov
 	return openai.NewClientWithConfig(config), provider
 }
 
-func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan wire.PromptMessage, optionChannel chan int, confirmationChannel chan bool, sessionID string) {
+func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel chan wire.PromptMessage, optionChannel chan int, confirmationChannel chan bool, retryChannel chan struct{}, sessionID string) {
 	ctx := context.Background()
 	toolsList := tools.BuildToolsList(be.Settings.GetBuildProjectTool(), be.Settings.GetRunTestsTool())
 
@@ -191,12 +201,32 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 			if err != nil {
 				errorMessage := fmt.Sprintf("API call failed: %v", err)
 				writeChannel <- wire.BackendMessage{
-					SystemMessage: &errorMessage,
-					ContextUsage:  contextUsage,
-					WorkDone:      true,
-					EnablePrompt:  true,
+					ErrorMessage: &wire.ErrorMessage{Text: errorMessage},
+					ContextUsage: contextUsage,
+					WorkDone:     true,
+					EnablePrompt: true,
 				}
-				break
+
+				// Wait for the user to either retry this request or enter a new
+				// prompt. Retrying repeats the exact same request; sending a new
+				// prompt starts a fresh request with the new prompt appended to
+				// the conversation history.
+				select {
+				case <-retryChannel:
+					continue
+				case nextPrompt, ok := <-promptChannel:
+					if !ok {
+						return
+					}
+					prompt = nextPrompt
+					messages = append(messages,
+						openai.ChatCompletionMessage{
+							Role:    openai.ChatMessageRoleUser,
+							Content: prompt.Prompt,
+						},
+					)
+					continue
+				}
 			}
 
 			// Record the context window usage reported by the provider. The

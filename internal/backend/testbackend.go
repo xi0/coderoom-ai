@@ -52,7 +52,8 @@ You can use the following keywords to test different message types in the UI.
 * proposal
 * options
 * blocked
-* context`
+* context
+* error`
 
 	writeChannel <- wire.BackendMessage{
 		Init: &wire.InitMessage{
@@ -92,6 +93,8 @@ func (be *TestBackend) handleMessage(message wire.FrontendMessage, writeChannel 
 			go be.blockedMessage(writeChannel)
 		} else if strings.Contains(message.Prompt.Prompt, "context") {
 			go be.contextMessage(writeChannel)
+		} else if strings.Contains(message.Prompt.Prompt, "error") {
+			go be.errorMessage(writeChannel)
 		} else {
 			go be.unknownMessage(writeChannel)
 		}
@@ -105,6 +108,11 @@ func (be *TestBackend) handleMessage(message wire.FrontendMessage, writeChannel 
 	if message.Confirmation != nil {
 		log.Printf("Confirmation: %t\n", *message.Confirmation)
 		confirmationFunc(writeChannel, sessionID, *message.Confirmation)
+	}
+
+	if message.Retry != nil && *message.Retry {
+		log.Printf("Retry\n")
+		be.retry(writeChannel)
 	}
 }
 
@@ -402,6 +410,30 @@ func (be *TestBackend) contextMessage(writeChannel chan wire.BackendMessage) {
 	}
 
 }
+func (be *TestBackend) errorMessage(writeChannel chan wire.BackendMessage) {
+	time.Sleep(2 * time.Second)
+
+	writeChannel <- wire.BackendMessage{
+		ErrorMessage: &wire.ErrorMessage{
+			Text: "API call failed: this is a simulated error.",
+		},
+		WorkDone:     true,
+		EnablePrompt: true,
+	}
+}
+
+func (be *TestBackend) retry(writeChannel chan wire.BackendMessage) {
+	time.Sleep(2 * time.Second)
+
+	systemMessage := `The retried call succeeded. 🎉`
+
+	writeChannel <- wire.BackendMessage{
+		SystemMessage: &systemMessage,
+		WorkDone:      true,
+		EnablePrompt:  true,
+	}
+}
+
 func (be *TestBackend) unknownMessage(writeChannel chan wire.BackendMessage) {
 	systemMessage := `I did not find a matching keyword in your prompt.`
 

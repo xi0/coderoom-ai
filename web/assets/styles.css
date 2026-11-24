@@ -720,6 +720,39 @@ html, body {
   background-color: var(--accent-hover);
 }
 
+/* Error Message Styling */
+.error-message .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 3px solid var(--diff-del-fg);
+}
+
+.error-message p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.error-btn-retry {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.error-btn-retry:hover {
+  background-color: var(--accent-hover);
+}
+
 /* Allow Directory Message Styling */
 .allow-dir-message .message-content {
   display: flex;
