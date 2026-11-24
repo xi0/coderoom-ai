@@ -19,6 +19,9 @@
   --scrollbar-thumb: rgba(255, 255, 255, 0.20);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
   --context-usage-bar-color: rgba(59, 130, 246, 0.45);
+  /* Bar color used once the context window usage reaches the warning
+   * threshold (see handleContextUsage in internal/ui/ui.go). */
+  --context-usage-bar-color-high: rgba(239, 68, 68, 0.55);
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -43,6 +46,7 @@
   --scrollbar-thumb: rgba(0, 0, 0, 0.20);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
   --context-usage-bar-color: rgba(37, 99, 235, 0.25);
+  --context-usage-bar-color-high: rgba(220, 38, 38, 0.30);
 }
 
 * {
@@ -968,6 +972,16 @@ html, body {
 
 .context-usage.hidden {
   display: none;
+}
+
+/* Warning state: once the context window is almost used up (>= 90%, see
+ * handleContextUsage in internal/ui/ui.go) the progress fill and the label
+ * switch to a red color so that the approaching limit is noticeable at a
+ * glance. The red tones are the ones already used for deletions and errors. */
+.context-usage.context-usage-high {
+  --context-usage-bar-color: var(--context-usage-bar-color-high);
+  border-color: var(--diff-del-fg);
+  color: var(--diff-del-fg);
 }
 
 .input-wrapper.focus {

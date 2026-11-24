@@ -947,6 +947,11 @@ func handleUpdateProgress(message *wire.ProgressMessage) {
 	text.TextContent(message.Text)
 }
 
+// contextUsageHighThreshold is the usage percentage (inclusive) from which the
+// context window usage indicator is shown in a warning (red) color, because the
+// context window is about to be exhausted.
+const contextUsageHighThreshold = 90
+
 // handleContextUsage updates the context window usage indicator. The label
 // shows the used percentage and the background is driven by the
 // --context-usage-progress custom property, which acts as a progress bar. The
@@ -954,6 +959,11 @@ func handleUpdateProgress(message *wire.ProgressMessage) {
 // overflow the bar, while the label still reports the real percentage. The
 // token counts (used and limit) are exposed through the element's title, which
 // browsers show on hover.
+//
+// When the usage reaches contextUsageHighThreshold the indicator additionally
+// gets the "context-usage-high" class (see styles.css), which switches the bar
+// and the label to a red color. The class is removed again if a later report
+// drops below the threshold.
 func handleContextUsage(usage *wire.ContextUsage) {
 	if usage == nil || usage.Limit <= 0 {
 		return
@@ -970,6 +980,12 @@ func handleContextUsage(usage *wire.ContextUsage) {
 	}
 	if fill > 100 {
 		fill = 100
+	}
+
+	if percent >= contextUsageHighThreshold {
+		indicator.AddClass("context-usage-high")
+	} else {
+		indicator.RemoveClass("context-usage-high")
 	}
 
 	indicator.TextContent(fmt.Sprintf("Context window used: %d%%", percent))
