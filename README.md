@@ -173,6 +173,7 @@ The external dependencies are intentionally few:
 - **Theme toggle** — switches between the dark and light theme; the choice is persisted.
 - **Settings menu** — opens the Global Settings and Project Settings dialogs.
 - **Changed files list** — after each completed turn the files touched in the session are listed together with the action taken on them (entire file, modified, deleted). Clicking a modified file opens a dialog with a colorized unified diff; new files are shown in full.
+- **Context usage indicator** — labeled "Context window used: N%" showing the percentage of the model's context window used in the current session. It sits in the unused area to the left of the prompt input (in the page gutter) without shrinking the prompt, and moves below the prompt on small screens. Its background doubles as a progress bar that fills up to the used percentage (capped at 100%), and once usage reaches 90% the bar and the label turn red to warn that the context window is nearly exhausted. Hovering the indicator reveals the used and limit token counts.
 - **Plans, options and blocked actions** — `propose_plan`, `present_options` and blocked command tools all render as messages with explicit buttons, so the agent can ask a question without a free form confirmation prompt.
 
 ### Test mode
@@ -343,12 +344,13 @@ Run the test suite using Make:
 make test
 ```
 
-This runs the `internal/backend`, `internal/blockingfiles` and `internal/tools` test packages. Individual packages can also be tested directly:
+This runs the `internal/backend`, `internal/blockingfiles`, `internal/tools` and `internal/wire` test packages. Individual packages can also be tested directly:
 
 ```bash
 go test -v internal/backend/*.go
 go test -v internal/blockingfiles/*.go
 go test -v internal/tools/*.go
+go test -v internal/wire/*.go
 ```
 
 On Windows, use the provided batch script instead:
@@ -357,7 +359,7 @@ On Windows, use the provided batch script instead:
 runtests.bat
 ```
 
-It runs the `internal/backend`, `internal/blockingfiles`, and `internal/tools` test packages.
+It runs the `internal/backend`, `internal/blockingfiles`, `internal/tools`, and `internal/wire` test packages.
 
 Note that `internal/browser`, `internal/ui` and `web/wasm` build only for `GOOS=js GOARCH=wasm`, so they cannot be tested on the host platform.
 
@@ -370,6 +372,7 @@ The project includes unit tests for:
 - The `build_project` and `run_tests` command tools, including blocking file behaviour
 - Source control path protection
 - Plan proposal, option presentation and progress reporting
+- Context window usage percentage calculation (`internal/wire`)
 - Blocking file pattern matching (`internal/blockingfiles`), and testing a pattern against a project directory (`internal/backend`)
 
 ### Adding Tests

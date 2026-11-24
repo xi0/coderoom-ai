@@ -23,6 +23,7 @@ type MessageHandlers struct {
 	BlockedMessage   func(*wire.BlockedMessage)
 	FilesMessage     func(*wire.FilesMessage)
 	UpdateProgress   func(*wire.ProgressMessage)
+	ContextUsage     func(*wire.ContextUsage)
 	WorkDone         func()
 	EnablePrompt     func()
 }
@@ -113,6 +114,9 @@ func (ws *WebSocket) onMessage(data string) {
 	}
 	if message.UpdateProgress != nil {
 		ws.handlers.UpdateProgress(message.UpdateProgress)
+	}
+	if message.ContextUsage != nil {
+		ws.handlers.ContextUsage(message.ContextUsage)
 	}
 	if message.WorkDone {
 		ws.handlers.WorkDone()

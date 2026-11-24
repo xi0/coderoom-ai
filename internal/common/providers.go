@@ -8,14 +8,16 @@ type Provider struct {
 }
 
 type Model struct {
-	Name    string
-	ModelID string
+	Name          string
+	ModelID       string
+	ContextWindow int
 }
 
 type ProviderModel struct {
-	ProviderName string
-	ModelName    string
-	BaseURL      string
+	ProviderName  string
+	ModelName     string
+	BaseURL       string
+	ContextWindow int
 }
 
 var (
@@ -26,12 +28,14 @@ var (
 			BaseURL:    "https://api.deepseek.com",
 			Models: []Model{
 				Model{
-					Name:    "DeepSeek Flash",
-					ModelID: "deepseek-flash",
+					Name:          "DeepSeek Flash",
+					ModelID:       "deepseek-flash",
+					ContextWindow: 1048576,
 				},
 				Model{
-					Name:    "DeepSeek V4 Pro",
-					ModelID: "deepseek-v4-pro",
+					Name:          "DeepSeek V4 Pro",
+					ModelID:       "deepseek-v4-pro",
+					ContextWindow: 1048576,
 				},
 			},
 		},
@@ -41,12 +45,14 @@ var (
 			BaseURL:    "https://depaza.com/v1",
 			Models: []Model{
 				Model{
-					Name:    "Max",
-					ModelID: "max",
+					Name:          "Max",
+					ModelID:       "max",
+					ContextWindow: 128000,
 				},
 				Model{
-					Name:    "Advanced",
-					ModelID: "advanced",
+					Name:          "Advanced",
+					ModelID:       "advanced",
+					ContextWindow: 128000,
 				},
 			},
 		},
@@ -56,8 +62,9 @@ var (
 			BaseURL:    "https://gdprchat.eu/api/v1",
 			Models: []Model{
 				Model{
-					Name:    "Code",
-					ModelID: "code",
+					Name:          "Code",
+					ModelID:       "code",
+					ContextWindow: 128000,
 				},
 			},
 		},
@@ -67,8 +74,9 @@ var (
 			BaseURL:    "https://api.moonshot.ai/v1",
 			Models: []Model{
 				Model{
-					Name:    "Kimi K3",
-					ModelID: "kimi-k3",
+					Name:          "Kimi K3",
+					ModelID:       "kimi-k3",
+					ContextWindow: 256000,
 				},
 			},
 		},
@@ -78,8 +86,9 @@ var (
 			BaseURL:    "https://api.openai.com/v1",
 			Models: []Model{
 				Model{
-					Name:    "GPT-6 Luna",
-					ModelID: "gpt-6-luna",
+					Name:          "GPT-6 Luna",
+					ModelID:       "gpt-6-luna",
+					ContextWindow: 128000,
 				},
 			},
 		},
@@ -97,10 +106,27 @@ func init() {
 			}
 
 			ProvidersMap[p.ProviderID][m.ModelID] = &ProviderModel{
-				ProviderName: p.Name,
-				ModelName:    m.Name,
-				BaseURL:      p.BaseURL,
+				ProviderName:  p.Name,
+				ModelName:     m.Name,
+				BaseURL:       p.BaseURL,
+				ContextWindow: m.ContextWindow,
 			}
 		}
 	}
+}
+
+// ContextWindow returns the context window size in tokens for the given
+// provider and model, or 0 if the model is not known.
+func ContextWindow(providerID, modelID string) int {
+	models, ok := ProvidersMap[providerID]
+	if !ok {
+		return 0
+	}
+
+	model, ok := models[modelID]
+	if !ok {
+		return 0
+	}
+
+	return model.ContextWindow
 }

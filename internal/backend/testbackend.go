@@ -51,7 +51,8 @@ You can use the following keywords to test different message types in the UI.
 * tool
 * proposal
 * options
-* blocked`
+* blocked
+* context`
 
 	writeChannel <- wire.BackendMessage{
 		Init: &wire.InitMessage{
@@ -88,6 +89,8 @@ func (be *TestBackend) handleMessage(message wire.FrontendMessage, writeChannel 
 		} else if strings.Contains(message.Prompt.Prompt, "blocked") {
 			confirmationFunc = be.blockedConfirmation
 			go be.blockedMessage(writeChannel)
+		} else if strings.Contains(message.Prompt.Prompt, "context") {
+			go be.contextMessage(writeChannel)
 		} else {
 			go be.unknownMessage(writeChannel)
 		}
@@ -362,6 +365,42 @@ func (be *TestBackend) blockedConfirmation(writeChannel chan wire.BackendMessage
 	}
 }
 
+func (be *TestBackend) contextMessage(writeChannel chan wire.BackendMessage) {
+	time.Sleep(2 * time.Second)
+
+	limit := 128000
+	usages := []int{
+		10000,
+		50000,
+		64000,
+		115200,
+		128000,
+		160000,
+	}
+
+	for _, usage := range usages {
+		systemMessage := fmt.Sprintf("%d of %d tokens used", usage, limit)
+
+		writeChannel <- wire.BackendMessage{
+			SystemMessage: &systemMessage,
+			ContextUsage: &wire.ContextUsage{
+				Used:  usage,
+				Limit: limit,
+			},
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+
+	systemMessage := "All done"
+
+	writeChannel <- wire.BackendMessage{
+		SystemMessage: &systemMessage,
+		WorkDone:      true,
+		EnablePrompt:  true,
+	}
+
+}
 func (be *TestBackend) unknownMessage(writeChannel chan wire.BackendMessage) {
 	systemMessage := `I did not find a matching keyword in your prompt.`
 

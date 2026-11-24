@@ -298,6 +298,12 @@ func (s *Style) Height(value string) {
 	s.value.Set("height", value)
 }
 
+// SetProperty sets a CSS property (including custom properties such as
+// "--my-var") using the style object's setProperty method.
+func (s *Style) SetProperty(property, value string) {
+	s.value.Call("setProperty", property, value)
+}
+
 func (o *Object) Location() *Location {
 	l := o.value.Get("location")
 
