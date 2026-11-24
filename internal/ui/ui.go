@@ -123,6 +123,7 @@ func initDone() {
 			BlockedMessage:   handleBlockedMessage,
 			FilesMessage:     handleFilesMessage,
 			UpdateProgress:   handleUpdateProgress,
+			ContextUsage:     handleContextUsage,
 			WorkDone:         handleWorkDone,
 			EnablePrompt:     handleEnablePrompt,
 		},
@@ -944,6 +945,29 @@ func handleUpdateProgress(message *wire.ProgressMessage) {
 	workingMessage := doc.GetElementByID("working-message")
 	text := workingMessage.GetElementsByClassName("message-text")[0]
 	text.TextContent(message.Text)
+}
+
+// handleContextUsage updates the context window usage indicator in the lower
+// left of the input area. The percentage is shown directly and the token counts
+// (used and limit) are exposed through the element's title, which browsers show
+// on hover.
+func handleContextUsage(usage *wire.ContextUsage) {
+	if usage == nil || usage.Limit <= 0 {
+		return
+	}
+
+	doc := browser.Document()
+	indicator := doc.GetElementByID("context-usage")
+
+	percent := usage.Percent()
+	indicator.TextContent(fmt.Sprintf("%d%%", percent))
+	indicator.SetAttribute("title", fmt.Sprintf(
+		"Context usage: %d / %d tokens (%d%%)",
+		usage.Used,
+		usage.Limit,
+		percent,
+	))
+	indicator.RemoveClass("hidden")
 }
 
 func handleWorkDone() {

@@ -1,5 +1,7 @@
 package wire
 
+import "math"
+
 // Messages from the frontend
 
 type FrontendMessage struct {
@@ -31,8 +33,28 @@ type BackendMessage struct {
 	BlockedMessage   *BlockedMessage  `json:"blocked_message,omitempty"`
 	FilesMessage     *FilesMessage    `json:"files_message,omitempty"`
 	UpdateProgress   *ProgressMessage `json:"update_progress,omitempty"`
+	ContextUsage     *ContextUsage    `json:"context_usage,omitempty"`
 	WorkDone         bool             `json:"work_done"`
 	EnablePrompt     bool             `json:"enable_prompt"`
+}
+
+// ContextUsage describes how much of the model's context window is used in the
+// current session. Used is the number of tokens currently occupying the
+// context and Limit is the model's context window size in tokens.
+type ContextUsage struct {
+	Used  int `json:"used"`
+	Limit int `json:"limit"`
+}
+
+// Percent returns the context window usage as a rounded percentage. It returns
+// 0 when the limit is unknown or the usage is nil, so callers can safely use it
+// to decide whether to show an indicator.
+func (c *ContextUsage) Percent() int {
+	if c == nil || c.Limit <= 0 {
+		return 0
+	}
+
+	return int(math.Round(float64(c.Used) / float64(c.Limit) * 100))
 }
 
 type InitMessage struct {

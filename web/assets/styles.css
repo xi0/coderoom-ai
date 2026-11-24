@@ -901,9 +901,20 @@ html, body {
   scrollbar-gutter: stable;
 }
 
-.input-wrapper {
+/* The input area holds the context usage indicator (on the left) and the prompt
+ * wrapper (on the right). It is centered and capped to the same width as the
+ * conversation so that it lines up with the messages above. */
+.input-area {
   width: 100%;
   max-width: 1200px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.input-wrapper {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: flex-end;
   background-color: var(--bg-tertiary);
@@ -911,6 +922,30 @@ html, body {
   border-radius: 10px;
   padding: 8px 12px;
   gap: 8px;
+}
+
+/* Context window usage indicator. It sits at the lower left, just left of the
+ * prompt input, and is bottom-aligned so it stays in the corner as the input
+ * grows. The percentage is shown directly; the used/limit token counts are
+ * exposed via the title attribute (browser tooltip on hover). */
+.context-usage {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.context-usage.hidden {
+  display: none;
 }
 
 .input-wrapper.focus {
@@ -1448,6 +1483,19 @@ dialog::backdrop {
 
   .user-message .message-content {
     max-width: 90%;
+  }
+
+  /* On small screens the context usage indicator moves below the prompt
+   * instead of sitting beside it. */
+  .input-area {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .context-usage {
+    order: 1;
+    align-self: flex-start;
   }
 }
 

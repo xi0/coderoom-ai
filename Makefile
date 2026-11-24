@@ -11,3 +11,4 @@ test:
 	go test -v internal/backend/*.go
 	go test -v internal/blockingfiles/*.go
 	go test -v internal/tools/*.go
+	go test -v internal/wire/*.go

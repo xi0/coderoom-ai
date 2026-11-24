@@ -14,3 +14,8 @@ go test -v github.com/xi0/coderoom-ai/internal/tools
 if %errorlevel% neq 0 (
     exit /b 1
 )
+
+go test -v github.com/xi0/coderoom-ai/internal/wire
+if %errorlevel% neq 0 (
+    exit /b 1
+)

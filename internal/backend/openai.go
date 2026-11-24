@@ -163,6 +163,12 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 		},
 	}
 
+	// contextUsage holds the most recent context window usage reported by the
+	// provider. It is included in every BackendMessage the agent loop sends so
+	// that the UI indicator stays up to date. It stays nil until the first
+	// response with usage information is received.
+	var contextUsage *wire.ContextUsage
+
 	for prompt := range promptChannel {
 		messages = append(messages,
 			openai.ChatCompletionMessage{
@@ -185,10 +191,25 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 				errorMessage := fmt.Sprintf("API call failed: %v", err)
 				writeChannel <- wire.BackendMessage{
 					SystemMessage: &errorMessage,
+					ContextUsage:  contextUsage,
 					WorkDone:      true,
 					EnablePrompt:  true,
 				}
 				break
+			}
+
+			// Record the context window usage reported by the provider. The
+			// total token count of the response reflects how much of the
+			// model's context window is currently occupied. It is only
+			// available when the provider reports usage and the model has a
+			// known context window.
+			if resp.Usage.TotalTokens > 0 {
+				if limit := common.ContextWindow(provider.ProviderID, provider.ModelID); limit > 0 {
+					contextUsage = &wire.ContextUsage{
+						Used:  resp.Usage.TotalTokens,
+						Limit: limit,
+					}
+				}
 			}
 
 			msg := resp.Choices[0].Message
@@ -201,6 +222,7 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 				reasoning := msg.ReasoningContent
 				writeChannel <- wire.BackendMessage{
 					ReasoningMessage: &reasoning,
+					ContextUsage:     contextUsage,
 				}
 				msg.ReasoningContent = ""
 			}
@@ -217,6 +239,7 @@ func (be *OpenAI) agentLoop(writeChannel chan wire.BackendMessage, promptChannel
 				writeChannel <- wire.BackendMessage{
 					SystemMessage: &msg.Content,
 					FilesMessage:  filesMessage,
+					ContextUsage:  contextUsage,
 					WorkDone:      true,
 					EnablePrompt:  true,
 				}
