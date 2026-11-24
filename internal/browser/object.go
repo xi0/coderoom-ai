@@ -34,9 +34,10 @@ func (o *Object) Body() *Object {
 }
 
 const (
-	EventChange = "change"
-	EventClick  = "click"
-	EventInput  = "input"
+	EventChange  = "change"
+	EventClick   = "click"
+	EventInput   = "input"
+	EventKeyDown = "keydown"
 )
 
 func Alert(text string) {
@@ -65,6 +66,36 @@ func (o *Object) AddClickHandler(h func(*Object, *Object) any) {
 
 func (o *Object) AddInputHandler(h func(*Object, *Object) any) {
 	o.AddEventHandler(EventInput, h)
+}
+
+func (o *Object) AddKeyDownHandler(h func(*Object, *Object) any) {
+	o.AddEventHandler(EventKeyDown, h)
+}
+
+// Key returns the value of the key property of a keyboard event, e.g. "Enter".
+func (o *Object) Key() string {
+	key := o.value.Get("key")
+	if key.Type() == js.TypeString {
+		return key.String()
+	}
+
+	return ""
+}
+
+func (o *Object) ShiftKey() bool {
+	return o.value.Get("shiftKey").Bool()
+}
+
+func (o *Object) CtrlKey() bool {
+	return o.value.Get("ctrlKey").Bool()
+}
+
+func (o *Object) AltKey() bool {
+	return o.value.Get("altKey").Bool()
+}
+
+func (o *Object) MetaKey() bool {
+	return o.value.Get("metaKey").Bool()
 }
 
 func (o *Object) PreventDefault() {

@@ -87,6 +87,7 @@ func (s *Settings) serveGlobal(w http.ResponseWriter, r *http.Request) {
 			DefaultModifications: true,
 			DarkTheme:            true,
 			Verbosity:            wire.VerbosityMedium,
+			SubmitHotkey:         wire.SubmitHotkeyEnter,
 		}
 		err = json.Unmarshal(data, s.global)
 		s.mu.Unlock()
@@ -147,6 +148,7 @@ func (s *Settings) loadGlobal() error {
 				DefaultModifications: true,
 				DarkTheme:            true,
 				Verbosity:            wire.VerbosityMedium,
+				SubmitHotkey:         wire.SubmitHotkeyEnter,
 			}
 			return nil
 		} else {
@@ -163,6 +165,12 @@ func (s *Settings) loadGlobal() error {
 	// setting existed or that contain an unknown value.
 	if !wire.ValidVerbosity(s.global.Verbosity) {
 		s.global.Verbosity = wire.VerbosityMedium
+	}
+
+	// Fall back to the default submit hotkey for configs written before the
+	// setting existed or that contain an unknown value.
+	if !wire.ValidSubmitHotkey(s.global.SubmitHotkey) {
+		s.global.SubmitHotkey = wire.SubmitHotkeyEnter
 	}
 
 	return nil
@@ -248,6 +256,23 @@ func (s *Settings) GetVerbosity() string {
 	}
 
 	return s.global.Verbosity
+}
+
+// GetSubmitHotkey returns the configured key combination that submits the
+// prompt, falling back to Enter if the setting is missing or unknown.
+func (s *Settings) GetSubmitHotkey() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.global == nil {
+		return wire.SubmitHotkeyEnter
+	}
+
+	if !wire.ValidSubmitHotkey(s.global.SubmitHotkey) {
+		return wire.SubmitHotkeyEnter
+	}
+
+	return s.global.SubmitHotkey
 }
 
 func (s *Settings) GetProjectName() string {
