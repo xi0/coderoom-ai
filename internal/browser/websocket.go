@@ -17,6 +17,7 @@ type MessageHandlers struct {
 	AllowDirMessage  func(string)
 	SystemMessage    func(string)
 	ReasoningMessage func(string)
+	ErrorMessage     func(*wire.ErrorMessage)
 	ToolMessage      func(*wire.ToolMessage)
 	ProposalMessage  func(string)
 	OptionsMessage   func(*wire.OptionsMessage)
@@ -96,6 +97,9 @@ func (ws *WebSocket) onMessage(data string) {
 	}
 	if message.ReasoningMessage != nil {
 		ws.handlers.ReasoningMessage(*message.ReasoningMessage)
+	}
+	if message.ErrorMessage != nil {
+		ws.handlers.ErrorMessage(message.ErrorMessage)
 	}
 	if message.ToolMessage != nil {
 		ws.handlers.ToolMessage(message.ToolMessage)
